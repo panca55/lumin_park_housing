@@ -1,17 +1,60 @@
 @php $viewerId = 'viewer-3d-' . uniqid(); @endphp
 
-<div class="w-full">
-    <div class="relative w-full rounded-2xl overflow-hidden border-2 border-gray-200 dark:border-gray-700 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 shadow-xl"
-        style="aspect-ratio: 4/3; min-height: 400px;">
+<style scoped>
+    .viewer-wrapper {
+        width: 100%;
+    }
+
+    .viewer-container {
+        position: relative;
+        width: 100%;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 2px solid #e5e7eb;
+        background: linear-gradient(to bottom right, #f8fafc, #f1f5f9);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        aspect-ratio: 4/3;
+        min-height: 400px;
+    }
+
+    .viewer-canvas {
+        width: 100%;
+        height: 100%;
+    }
+
+    .placeholder-wrapper {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        color: #9ca3af;
+    }
+
+    .placeholder-icon {
+        width: 96px;
+        height: 96px;
+    }
+
+    .placeholder-message {
+        font-size: 18px;
+        font-weight: 600;
+    }
+</style>
+
+<div class="viewer-wrapper">
+    <div class="viewer-container">
         @if($model_3d)
-            <canvas id="{{ $viewerId }}" class="w-full h-full"></canvas>
+            <canvas id="{{ $viewerId }}" class="viewer-canvas"></canvas>
         @else
-            <div class="absolute inset-0 flex flex-col items-center justify-center gap-4 text-gray-400 dark:text-gray-500">
-                <svg class="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="placeholder-wrapper">
+                <svg class="placeholder-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                         d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                 </svg>
-                <p class="text-lg font-semibold">3D Model Tidak Tersedia</p>
+                <p class="placeholder-message">3D Model Tidak Tersedia</p>
             </div>
         @endif
     </div>
