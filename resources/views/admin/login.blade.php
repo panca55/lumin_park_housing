@@ -69,7 +69,17 @@
                             </button>
                         </div>
 
-                        <div class="text-center">
+                        <div class="mt-4 text-center">
+                            <p class="text-sm text-gray-600">
+                                Belum punya akun?
+                                <a href="/admin/register"
+                                    class="font-medium text-indigo-600 hover:text-indigo-500 transition-colors">
+                                    Daftar sekarang
+                                </a>
+                            </p>
+                        </div>
+
+                        <div class="text-center mt-4 pt-4 border-t border-gray-200">
                             <p class="text-xs text-gray-500">
                                 Default credentials: admin@luminpark.com / admin123
                             </p>

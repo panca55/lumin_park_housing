@@ -16,6 +16,8 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+// use Filament\Pages\Auth\Register;
+use App\Filament\Admin\Pages\Auth\Register;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -23,14 +25,16 @@ class AdminPanelProvider extends PanelProvider
     {
         return $panel
             ->default()
-            ->id('admin')
-            ->path('admin')
+            ->id('dashboard')
+            ->path('dashboard')
             ->brandName('Lumin Park Admin')
             ->colors([
                 'primary' => Color::Blue,
             ])
             ->login() // Enable Filament Login UI
             // ->logoutUrl(route('admin.logout')) // Redirect logout to your controller
+            ->registration(Register::class) // Enable Filament Registration UI
+            ->emailVerification(false) // Disable email verification
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             // ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
@@ -45,7 +49,6 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            ->homeUrl(fn() => route('filament.admin.pages.dashboard'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

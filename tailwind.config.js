@@ -10,6 +10,9 @@ export default {
         './resources/**/*.vue',
         './app/**/*.php',
         './resources/views/**/*.blade.php',
+        './resources/views/filament/**/*.blade.php',
+        './vendor/filament/**/*.blade.php',
+        './app/Filament/**/*.php',
     ],
     safelist: [
         // Colors

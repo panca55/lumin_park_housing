@@ -6,8 +6,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Lumin Park Housing - Rumah Impian Anda</title>
         @php
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+            use Illuminate\Support\Facades\Storage;
+            use Illuminate\Support\Str;
         @endphp
 
         <!-- Fonts -->
@@ -16,12 +16,184 @@ use Illuminate\Support\Str;
         <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+            * {
+                font-family: 'Inter', sans-serif;
+            }
+
+            .property-card {
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                opacity: 0;
+                animation: fadeInUp 0.6s ease-out forwards;
+            }
+
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .property-card:nth-child(1) {
+                animation-delay: 0.1s;
+            }
+
+            .property-card:nth-child(2) {
+                animation-delay: 0.2s;
+            }
+
+            .property-card:nth-child(3) {
+                animation-delay: 0.3s;
+            }
+
+            .property-card:nth-child(4) {
+                animation-delay: 0.4s;
+            }
+
+            .property-card:nth-child(5) {
+                animation-delay: 0.5s;
+            }
+
+            .property-card:nth-child(6) {
+                animation-delay: 0.6s;
+            }
+
+            .property-card:hover {
+                transform: translateY(-12px) scale(1.02);
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            }
+
+            .property-image {
+                transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .property-card:hover .property-image {
+                transform: scale(1.15) rotate(2deg);
+            }
+
+            .filter-btn {
+                transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .filter-btn::before {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 0;
+                height: 0;
+                border-radius: 50%;
+                background: rgba(102, 126, 234, 0.3);
+                transform: translate(-50%, -50%);
+                transition: width 0.6s, height 0.6s;
+            }
+
+            .filter-btn:hover::before {
+                width: 300px;
+                height: 300px;
+            }
+
+            .filter-btn.active {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+                transform: translateY(-2px);
+            }
+
+            .gradient-text {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+
+            .badge-available {
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+                backdrop-filter: blur(10px);
+            }
+
+            .badge-reserved {
+                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+                backdrop-filter: blur(10px);
+            }
+
+            .badge-type {
+                background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+                backdrop-filter: blur(10px);
+            }
+
+            .search-input:focus {
+                box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+                transform: translateY(-2px);
+            }
+
+            .filter-container {
+                background: rgba(255, 255, 255, 0.9);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+
+            .overlay-gradient {
+                background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0) 100%);
+            }
+
+            .price-tag {
+                background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+
+            .card-shine {
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+                transition: left 0.7s;
+            }
+
+            .property-card:hover .card-shine {
+                left: 100%;
+            }
+
+            @keyframes pulse {
+
+                0%,
+                100% {
+                    opacity: 1;
+                }
+
+                50% {
+                    opacity: 0.5;
+                }
+            }
+
+            .pulse-animation {
+                animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            }
+        </style>
         <script>
             let scene, camera, renderer, house, currentModel, controls;
 
             function init3DViewer(modelPath) {
                 const container = document.getElementById('viewer3d');
                 const loading = document.getElementById('viewer-loading');
+
+                if (!container) return;
 
                 // Clear previous content
                 while (container.firstChild) {
@@ -144,14 +316,22 @@ use Illuminate\Support\Str;
 
             function openModal(property) {
                 const modal = document.getElementById('propertyModal');
+                if (!modal) return;
+
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
 
-                document.getElementById('modalName').textContent = property.name;
-                document.getElementById('modalPrice').textContent = property.price;
-                document.getElementById('modalBedrooms').textContent = 'N/A';
-                document.getElementById('modalBathrooms').textContent = 'N/A';
-                document.getElementById('modalArea').textContent = 'N/A';
+                const modalName = document.getElementById('modalName');
+                const modalPrice = document.getElementById('modalPrice');
+                const modalBedrooms = document.getElementById('modalBedrooms');
+                const modalBathrooms = document.getElementById('modalBathrooms');
+                const modalArea = document.getElementById('modalArea');
+
+                if (modalName) modalName.textContent = property.name;
+                if (modalPrice) modalPrice.textContent = property.price;
+                if (modalBedrooms) modalBedrooms.textContent = 'N/A';
+                if (modalBathrooms) modalBathrooms.textContent = 'N/A';
+                if (modalArea) modalArea.textContent = 'N/A';
 
                 const statusElement = document.getElementById('modalStatus');
                 if (statusElement) {
@@ -170,15 +350,19 @@ use Illuminate\Support\Str;
                         const container = document.getElementById('viewer3d');
                         const loading = document.getElementById('viewer-loading');
                         if (loading) loading.style.display = 'none';
-                        container.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">3D Model tidak tersedia</div>';
+                        if (container) {
+                            container.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">3D Model tidak tersedia</div>';
+                        }
                     }
                 }, 100);
             }
 
             function closeModal() {
                 const modal = document.getElementById('propertyModal');
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
+                if (modal) {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }
                 document.body.style.overflow = 'auto';
 
                 // Clean up 3D viewer
@@ -204,9 +388,66 @@ use Illuminate\Support\Str;
             }
 
             function scheduleVisit() {
-                const propertyName = document.getElementById('modalName').textContent;
-                const message = `Halo, saya tertarik untuk menjadwalkan kunjungan ke ${propertyName}`;
-                window.open(`https://wa.me/6281234567890?text=${encodeURIComponent(message)}`, '_blank');
+                // Cek apakah user sudah login
+                const isAuthenticated = {{ Auth::check() ? 'true' : 'false' }};
+                
+                if (!isAuthenticated) {
+                    alert('Silakan login terlebih dahulu untuk menjadwalkan kunjungan');
+                    window.location.href = '/dashboard/login';
+                    return;
+                }
+
+                const modalName = document.getElementById('modalName');
+                const propertyName = modalName ? modalName.textContent : 'Properti';
+                const userName = '{{ Auth::check() ? Auth::user()->name : "" }}';
+                const userEmail = '{{ Auth::check() ? Auth::user()->email : "" }}';
+                
+                const message = `Halo, saya tertarik untuk menjadwalkan kunjungan\n\n` +
+                    `━━━━━━━━━━━━━━━━━━━━━━\n` +
+                    `🏠 *PROPERTI*\n` +
+                    `━━━━━━━━━━━━━━━━━━━━━━\n` +
+                    `${propertyName}\n\n` +
+                    `━━━━━━━━━━━━━━━━━━━━━━\n` +
+                    `👤 *INFORMASI CUSTOMER*\n` +
+                    `━━━━━━━━━━━━━━━━━━━━━━\n` +
+                    `Nama: ${userName}\n` +
+                    `Email: ${userEmail}\n\n` +
+                    `Mohon informasi jadwal kunjungan yang tersedia.\n` +
+                    `Terima kasih 🙏`;
+                
+                window.open(`https://wa.me/6285664954621?text=${encodeURIComponent(message)}`, '_blank');
+            }
+
+            function contactDeveloper() {
+                // Cek apakah user sudah login
+                const isAuthenticated = {{ Auth::check() ? 'true' : 'false' }};
+                
+                if (!isAuthenticated) {
+                    alert('Silakan login terlebih dahulu untuk menghubungi developer');
+                    window.location.href = '/dashboard/login';
+                    return;
+                }
+
+                const modalName = document.getElementById('modalName');
+                const propertyName = modalName ? modalName.textContent : 'Properti';
+                const userName = '{{ Auth::check() ? Auth::user()->name : "" }}';
+                const userEmail = '{{ Auth::check() ? Auth::user()->email : "" }}';
+                
+                const message = `Halo Admin Lumin Park 👋\n\n` +
+                    `Saya ingin mendapatkan informasi lebih lanjut\n\n` +
+                    `━━━━━━━━━━━━━━━━━━━━━━\n` +
+                    `🏠 *PROPERTI*\n` +
+                    `━━━━━━━━━━━━━━━━━━━━━━\n` +
+                    `${propertyName}\n\n` +
+                    `━━━━━━━━━━━━━━━━━━━━━━\n` +
+                    `👤 *INFORMASI CUSTOMER*\n` +
+                    `━━━━━━━━━━━━━━━━━━━━━━\n` +
+                    `Nama: ${userName}\n` +
+                    `Email: ${userEmail}\n\n` +
+                    `Mohon informasi detail dan harga terbaik.\n` +
+                    `Terima kasih 🙏`;
+                
+                window.open(`https://wa.me/6285664954621?text=${encodeURIComponent(message)}`, '_blank');
             }
 
             // Make functions global so they can be called from HTML
@@ -214,6 +455,7 @@ use Illuminate\Support\Str;
             window.closeModal = closeModal;
             window.closeModalOnBackdrop = closeModalOnBackdrop;
             window.scheduleVisit = scheduleVisit;
+            window.contactDeveloper = contactDeveloper;
         </script>
         <!-- Styles / Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -236,6 +478,26 @@ use Illuminate\Support\Str;
                         <a href="#catalog" class="text-gray-700 hover:text-blue-600 transition">Katalog</a>
                         <a href="#about" class="text-gray-700 hover:text-blue-600 transition">Tentang</a>
                         <a href="#contact" class="text-gray-700 hover:text-blue-600 transition">Kontak</a>
+                    </div>
+                    <div class="hidden md:flex items-center space-x-4">
+                        @auth
+                            <a href="/dashboard" class="text-gray-700 hover:text-blue-600 transition font-medium">
+                                Dashboard
+                            </a>
+                            <form method="POST" action="/logout" class="inline">
+                                @csrf
+                                <button type="submit" class="px-4 py-2 text-gray-700 hover:text-blue-600 transition font-medium">
+                                    Logout
+                                </button>
+                            </form>
+                        @else
+                            <a href="/dashboard/login" class="text-gray-700 hover:text-blue-600 transition font-medium">
+                                Login
+                            </a>
+                            <a href="/dashboard/register" class="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg font-medium">
+                                Register
+                            </a>
+                        @endauth
                     </div>
                     <button class="md:hidden text-gray-700">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -340,95 +602,182 @@ use Illuminate\Support\Str;
         </section>
 
         <!-- Catalog Section -->
-        <section id="catalog" class="py-16 bg-gray-50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-12">
-                    <h2 class="text-4xl font-bold text-gray-900 mb-4">Katalog Properti</h2>
-                    <p class="text-xl text-gray-600">Pilihan rumah eksklusif dengan berbagai tipe dan desain</p>
+        <section id="catalog"
+            class="py-24 bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 relative overflow-hidden">
+            <!-- Background Decoration -->
+            <div
+                class="absolute top-0 left-0 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob">
+            </div>
+            <div
+                class="absolute top-0 right-0 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000">
+            </div>
+            <div
+                class="absolute bottom-0 left-1/2 w-96 h-96 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000">
+            </div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div class="text-center mb-16">
+                    <div class="inline-block mb-4">
+                        <span
+                            class="bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-full shadow-lg">✨
+                            Properti Terbaik</span>
+                    </div>
+                    <h2 class="text-5xl md:text-6xl font-extrabold text-gray-900 mb-4 tracking-tight">
+                        <span class="gradient-text">Katalog</span> Properti
+                    </h2>
+                    <p class="text-xl text-gray-600 max-w-2xl mx-auto">Temukan hunian impian Anda dengan pilihan desain
+                        modern & eksklusif yang memukau</p>
                 </div>
 
                 <!-- Filter -->
-                <!-- Filter berdasarkan kategorig -->
-                <div class="flex flex-wrap gap-4 mb-8 justify-center">
-                    <button onclick="filterProperties('all')" class="px-4 py-2 rounded-lg border">Semua</button>
-
-                
-                    @foreach($katalogs->pluck('category')->unique() as $category)
-                        <button onclick="filterProperties('{{ $category }}')" class="px-4 py-2 rounded-lg border">
-                            {{ ucfirst($category) }}
-                        </button>
-                    @endforeach
-                </div>
-
-
-                <!-- Property Grid --> 
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-
-                    @forelse($katalogs as $katalog)
-                                            @php
-    // Create property object for JavaScript
-    $property = [
-        'id' => $katalog->id,
-        'name' => $katalog->name,
-        'category' => $katalog->category,
-        'price' => 'Rp ' . number_format((float) $katalog->price, 0, ',', '.'),
-        'status' => $katalog->is_available ? 'available' : 'reserved',
-        'image' => $katalog->image ? Storage::url($katalog->image) : 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600',
-        'model3d' => $katalog->model_3d ? Storage::url($katalog->model_3d) : '/storage/models/model-' . strtolower(str_replace(' ', '-', $katalog->type)) . '.glb',
-        'description' => $katalog->description
-    ];
-                                            @endphp
-
-                                            <div data-type="{{ $katalog->type }}" data-category="{{ $katalog->category }}"
-                                                class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-2"
-                                                onclick="openModal({{ json_encode($property) }})">
-                                                <div class="relative">
-                                                    <img src="{{ $property['image'] }}" alt="{{ $katalog->name }}"
-                                                        class="w-full h-64 object-cover">
-                                                    <div class="absolute top-4 right-4">
-                                                        <span class="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                                                            {{ $katalog->type }}
-                                                        </span>
-                                                    </div>
-                                                    <div class="absolute top-4 left-4">
-                                                        @if($katalog->is_available)
-                                                            <span
-                                                                class="bg-green-600 text-white px-3 py-1 rounded-full text-xs font-semibold">Tersedia</span>
-                                                        @else
-                                                            <span
-                                                                class="bg-yellow-600 text-white px-3 py-1 rounded-full text-xs font-semibold">Tidak Tersedia</span>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                                <div class="p-6">
-                                                    <h3 class="text-xl font-bold text-gray-900 mb-2">{{ $katalog->name }}</h3>
-                                                    <p class="text-2xl font-bold text-blue-600 mb-4">{{ $property['price'] }}</p>
-                                                    @if($katalog->description)
-                                                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">
-                                                            {{ Str::limit($katalog->description, 100) }}
-                                                        </p>
-                                                    @endif
-                                                    <div class="flex items-center space-x-4 text-gray-600 text-sm">
-                                                        <!-- Additional property details can be added here -->
-                                                    </div>
-                                                </div>
-                                            </div>
-                    @empty
-                        <div class="col-span-full text-center py-12">
-                            <div class="text-gray-500">
-                                <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="filter-container rounded-3xl shadow-2xl p-8 mb-16 backdrop-blur-xl">
+                    <div class="flex flex-col lg:flex-row items-center gap-6">
+                        <!-- Search Input -->
+                        <div class="relative w-full lg:flex-1 group">
+                            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                                <svg class="w-6 h-6 text-gray-400 group-focus-within:text-purple-500 transition-colors"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                            <input type="text" id="searchInput"
+                                placeholder="Cari properti berdasarkan nama, tipe, atau kategori..."
+                                class="search-input w-full pl-14 pr-14 py-5 rounded-2xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-all text-gray-700 placeholder-gray-400 text-lg font-medium shadow-sm" />
+                            <button id="clearSearch"
+                                class="absolute inset-y-0 right-0 pr-5 flex items-center transition-all hover:scale-110"
+                                style="display:none;">
+                                <svg class="w-5 h-5 text-gray-400 hover:text-red-500 transition-colors" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12">
                                     </path>
                                 </svg>
-                                <h3 class="text-xl font-semibold mb-2">Belum Ada Properti</h3>
-                                <p>Saat ini belum ada properti yang tersedia.</p>
+                            </button>
+                        </div>
+
+                        <!-- Category Filters -->
+                        <div class="flex flex-wrap gap-3 justify-center lg:justify-end">
+                            <button onclick="filterProperties('all')"
+                                class="filter-btn active px-8 py-3.5 rounded-xl border-2 border-gray-200 font-bold transition-all hover:border-purple-500 text-sm tracking-wide relative z-10">
+                                🏠 Semua
+                            </button>
+                            <button onclick="filterProperties('rumah')"
+                                class="filter-btn px-8 py-3.5 rounded-xl border-2 border-gray-200 font-bold transition-all hover:border-purple-500 text-sm tracking-wide relative z-10">
+                                🏡 Rumah
+                            </button>
+                            <button onclick="filterProperties('properti')"
+                                class="filter-btn px-8 py-3.5 rounded-xl border-2 border-gray-200 font-bold transition-all hover:border-purple-500 text-sm tracking-wide relative z-10">
+                                🪑 Perabotan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Property Grid -->
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    @forelse($katalogs as $katalog)
+                        @php
+                            $property = [
+                                'id' => $katalog->id,
+                                'name' => $katalog->name,
+                                'category' => $katalog->category,
+                                'price' => 'Rp ' . number_format((float) $katalog->price, 0, ',', '.'),
+                                'status' => $katalog->is_available ? 'available' : 'reserved',
+                                'image' => $katalog->image ? Storage::url($katalog->image) : 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600',
+                                'model3d' => $katalog->model_3d ? Storage::url($katalog->model_3d) : '/storage/models/model-' . strtolower(str_replace(' ', '-', $katalog->type)) . '.glb',
+                                'description' => $katalog->description
+                            ];
+                        @endphp
+
+                        <div onclick="openModal({{ json_encode($property) }})" data-type="{{ $katalog->type }}"
+                            data-category="{{ $katalog->category }}" data-name="{{ strtolower($katalog->name) }}"
+                            class="property-card group bg-white rounded-3xl shadow-xl overflow-hidden cursor-pointer transform hover:shadow-2xl relative">
+                            <!-- Shine Effect -->
+                            <div class="card-shine"></div>
+
+                            <div class="relative h-64 overflow-hidden">
+                                <img src="{{ $property['image'] }}" alt="{{ $katalog->name }}"
+                                    class="property-image w-full h-full object-cover" />
+
+                                <!-- Gradient Overlay -->
+                                <div class="overlay-gradient absolute inset-0"></div>
+
+                                <!-- Badges -->
+                                <div class="absolute top-4 right-4">
+                                    <span
+                                        class="badge-type inline-block text-white px-4 py-2 text-xs font-bold rounded-full shadow-lg backdrop-blur-sm">
+                                        {{ $katalog->type }}
+                                    </span>
+                                </div>
+                                <div class="absolute top-4 left-4">
+                                    <span
+                                        class="{{ $katalog->is_available ? 'badge-available' : 'badge-reserved' }} inline-block text-white px-4 py-2 text-xs font-bold rounded-full shadow-lg">
+                                        {{ $katalog->is_available ? '✓ Tersedia' : '⏳ Tidak Tersedia' }}
+                                    </span>
+                                </div>
+
+                                <!-- View 3D Button -->
+                                <div
+                                    class="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <span
+                                        class="bg-white/90 backdrop-blur-sm text-gray-900 px-4 py-2 rounded-full text-xs font-bold shadow-lg flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                            </path>
+                                        </svg>
+                                        Lihat 3D
+                                    </span>
+                                </div>
                             </div>
+
+                            <div class="p-6">
+                                <h3
+                                    class="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors line-clamp-1">
+                                    {{ $katalog->name }}
+                                </h3>
+                                <p class="price-tag text-3xl font-extrabold mb-3">{{ $property['price'] }}</p>
+                                @if($katalog->description)
+                                    <p class="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-4">
+                                        {{ Str::limit($katalog->description, 100) }}</p>
+                                @endif
+
+                                <!-- Action Button -->
+                                <div class="pt-4 border-t border-gray-100">
+                                    <button
+                                        class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Lihat Detail
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    @empty
+                        <div class="col-span-full text-center py-20">
+                            <div class="inline-block p-6 bg-white rounded-3xl shadow-xl mb-6">
+                                <svg class="w-24 h-24 text-gray-300 mx-auto" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                                    </path>
+                                </svg>
+                            </div>
+                            <h3 class="text-3xl font-bold text-gray-800 mb-2">Belum Ada Properti</h3>
+                            <p class="text-gray-500 text-lg">Properti baru akan segera hadir. Nantikan update terbaru kami!
+                                🏡</p>
                         </div>
                     @endforelse
                 </div>
             </div>
         </section>
+
 
         <!-- About Section -->
         <section id="about" class="py-16 bg-white">
@@ -524,7 +873,7 @@ use Illuminate\Support\Str;
         </footer>
 
         <!-- Modal -->
-        <div id="propertyModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4"
+        <div id="propertyModal" class="fixed inset-0 bg-black/25 hidden items-center justify-center z-50 p-4"
             onclick="closeModalOnBackdrop(event)">
             <div class="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto"
                 onclick="event.stopPropagation()">
@@ -562,87 +911,14 @@ use Illuminate\Support\Str;
                             <p id="modalPrice" class="text-4xl font-bold text-blue-600"></p>
                         </div>
 
-                        <div class="grid md:grid-cols-3 gap-6 mb-8">
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex items-center mb-2">
-                                    <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
-                                        </path>
-                                    </svg>
-                                    <span class="text-gray-600">Kamar Tidur</span>
-                                </div>
-                                <p id="modalBedrooms" class="text-2xl font-bold text-gray-900"></p>
-                            </div>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex items-center mb-2">
-                                    <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path>
-                                    </svg>
-                                    <span class="text-gray-600">Kamar Mandi</span>
-                                </div>
-                                <p id="modalBathrooms" class="text-2xl font-bold text-gray-900"></p>
-                            </div>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex items-center mb-2">
-                                    <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4">
-                                        </path>
-                                    </svg>
-                                    <span class="text-gray-600">Luas Tanah</span>
-                                </div>
-                                <p id="modalArea" class="text-2xl font-bold text-gray-900"></p>
-                            </div>
-                        </div>
 
-                        <div class="mb-8">
-                            <h3 class="text-xl font-bold text-gray-900 mb-4">Spesifikasi</h3>
-                            <ul class="grid md:grid-cols-2 gap-3 text-gray-600">
-                                <li class="flex items-center">
-                                    <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd"
-                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                            clip-rule="evenodd"></path>
-                                    </svg>
-                                    Taman Belakang
-                                </li>
-                                <li class="flex items-center">
-                                    <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd"
-                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                            clip-rule="evenodd"></path>
-                                    </svg>
-                                    Smart Home System
-                                </li>
-                                <li class="flex items-center">
-                                    <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd"
-                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                            clip-rule="evenodd"></path>
-                                    </svg>
-                                    Keamanan 24 Jam
-                                </li>
-                                <li class="flex items-center">
-                                    <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd"
-                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                            clip-rule="evenodd"></path>
-                                    </svg>
-                                    Kolam Renang Komunal
-                                </li>
-                            </ul>
-                        </div>
+
 
                         <div class="flex gap-4">
-                            <a href="https://wa.me/6281234567890"
+                            <button onclick="contactDeveloper()"
                                 class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition text-center">
-                                Hubungi Marketing
-                            </a>
+                                Hubungi Developer
+                            </button>
                             <button onclick="scheduleVisit()"
                                 class="flex-1 bg-white text-blue-600 py-3 rounded-lg font-semibold hover:bg-gray-50 transition border-2 border-blue-600">
                                 Jadwalkan Kunjungan
@@ -678,19 +954,77 @@ use Illuminate\Support\Str;
             });
 
             // Filter properties functionality
-            function filterProperties(category) {
-                    const cards = document.querySelectorAll('[data-category]');
-                    const buttons = document.querySelectorAll('#catalog button');
+            function filterProperties(category, searchTerm = '') {
+                const cards = document.querySelectorAll('[data-category]');
+                const buttons = document.querySelectorAll('#catalog button');
 
-                    cards.forEach(card => {
-                        const cardCategory = card.getAttribute('data-category');
-                        card.style.display = (category === 'all' || cardCategory === category) ? 'block' : 'none';
-                    });
-
-                    buttons.forEach(btn => btn.classList.remove('bg-blue-600', 'text-white'));
-                    const activeBtn = Array.from(buttons).find(b => b.innerText.toLowerCase() === (category === 'all' ? 'semua' : category.toLowerCase()));
-                    if (activeBtn) activeBtn.classList.add('bg-blue-600', 'text-white');
+                // Get search term from input if not provided
+                if (searchTerm === '') {
+                    const searchInput = document.getElementById('searchInput');
+                    searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
                 }
+
+                cards.forEach(card => {
+                    const cardCategory = card.getAttribute('data-category');
+                    const cardName = card.getAttribute('data-name') || '';
+                    const cardType = card.getAttribute('data-type') ? card.getAttribute('data-type').toLowerCase() : '';
+
+                    // Check category filter
+                    const categoryMatch = category === 'all' || cardCategory === category;
+
+                    // Check search filter (name, type, or category)
+                    const searchMatch = searchTerm === '' ||
+                        cardName.includes(searchTerm) ||
+                        cardType.includes(searchTerm) ||
+                        cardCategory.toLowerCase().includes(searchTerm);
+
+                    // Show card if both filters match
+                    card.style.display = (categoryMatch && searchMatch) ? 'block' : 'none';
+                });
+
+                // Update button styles
+                buttons.forEach(btn => btn.classList.remove('bg-blue-600', 'text-white'));
+                const activeBtn = Array.from(buttons).find(b => b.innerText.toLowerCase() === (category === 'all' ? 'semua' : category.toLowerCase()));
+                if (activeBtn) activeBtn.classList.add('bg-blue-600', 'text-white');
+            }
+
+            // Search input event listener
+            document.addEventListener('DOMContentLoaded', function () {
+                const searchInput = document.getElementById('searchInput');
+                const clearButton = document.getElementById('clearSearch');
+
+                if (searchInput) {
+                    searchInput.addEventListener('input', function () {
+                        // Get current active category
+                        const activeButton = document.querySelector('#catalog button.bg-blue-600');
+                        const currentCategory = activeButton ?
+                            (activeButton.textContent.toLowerCase() === 'semua' ? 'all' : activeButton.textContent.toLowerCase()) :
+                            'all';
+                        filterProperties(currentCategory);
+
+                        // Show/hide clear button
+                        if (clearButton) {
+                            clearButton.style.display = searchInput.value ? 'block' : 'none';
+                        }
+                    });
+                }
+
+                if (clearButton) {
+                    clearButton.addEventListener('click', function () {
+                        if (searchInput) {
+                            searchInput.value = '';
+                            searchInput.focus();
+                            clearButton.style.display = 'none';
+                            // Re-filter with empty search
+                            const activeButton = document.querySelector('#catalog button.bg-blue-600');
+                            const currentCategory = activeButton ?
+                                (activeButton.textContent.toLowerCase() === 'semua' ? 'all' : activeButton.textContent.toLowerCase()) :
+                                'all';
+                            filterProperties(currentCategory);
+                        }
+                    });
+                }
+            });
 
 
 

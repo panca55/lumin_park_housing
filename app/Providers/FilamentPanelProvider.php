@@ -18,6 +18,7 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use App\Filament\Resources\ProdukResource;
+use App\Filament\Admin\Pages\Auth\Login;
 
 class FilamentPanelProvider extends PanelProvider
 {
@@ -27,7 +28,8 @@ class FilamentPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(Login::class)
+            ->registration()
             ->colors([
                 'primary' => Color::Blue,
             ])

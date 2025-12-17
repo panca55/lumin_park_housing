@@ -36,11 +36,13 @@ class ProdukForm
                     ->prefix('Rp '),
                 FileUpload::make('image')
                     ->label('Image')
+                    ->disk('public')
                     ->helperText('Upload a product image.')
                     ->directory('images')
                     ->image(),
                 FileUpload::make('model_3d')
                     ->label('3D Model')
+                    ->disk('public')
                     ->helperText('Upload a 3D model file (e.g., .glb, .gltf).')
                     ->acceptedFileTypes(['model/gltf-binary', 'model/gltf+json', '.glb', '.gltf'])
                     ->directory('models')

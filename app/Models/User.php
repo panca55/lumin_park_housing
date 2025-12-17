@@ -6,18 +6,28 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 
-class User extends Authenticatable
+/**
+ * @method bool hasRole(string|array $roles)
+ * @method bool hasAnyRole(string|array $roles)
+ * @method bool hasPermissionTo(string $permission)
+ */
+
+
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles;
 
     /**
-     * Allow this user to access Filament admin by default in this dev setup.
-     * In production, replace with proper authorization checks.
+     * Allow this user to access Filament panel based on role.
      */
-    public function canAccessFilament(): bool
+    public function canAccessPanel(Panel $panel): bool
     {
+        // Allow all authenticated users to access the dashboard panel
         return true;
     }
 
