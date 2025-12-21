@@ -45,10 +45,15 @@ class Register extends BaseRegister
 
     protected function handleRegistration(array $data): User
     {
-        return User::create([
+        $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
         ]);
+
+        // Assign role 'user' automatically
+        $user->assignRole('user');
+
+        return $user;
     }
 }
