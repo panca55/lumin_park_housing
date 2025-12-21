@@ -26,7 +26,9 @@ class ProduksTable
             ->columns([
                 ImageColumn::make('image')
                     ->label('Gambar')
-                    ->size(80),
+                    ->disk('public')
+                    ->size(80)
+                    ->defaultImageUrl(url('/images/placeholder.png')),
 
                 TextColumn::make('name')
                     ->label('Nama Produk')
