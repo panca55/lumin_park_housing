@@ -16,6 +16,8 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\Widgets;
+
 // use Filament\Pages\Auth\Register;
 use App\Filament\Admin\Pages\Auth\Register;
 
@@ -45,7 +47,11 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 \App\Filament\Widgets\StatsOverviewWidget::class,
                 \App\Filament\Widgets\RecentPaymentsWidget::class,
+                \App\Filament\Widgets\LandingPageWidget::class,
+                Widgets\AccountWidget::class,
+                Widgets\FilamentInfoWidget::class,
             ])
+            
             ->authMiddleware([
                 Authenticate::class,
             ])

@@ -35,13 +35,15 @@ class ProduksTable
                     ->weight(FontWeight::Bold)
                     ->searchable()
                     ->wrap(),
-
+                TextColumn::make('description')
+                    ->label('Deskripsi')
+                    ->weight(FontWeight::Bold)
+                    ->wrap(),
                 TextColumn::make('price')
                     ->label('Harga')
                     ->money('IDR')
                     ->weight(FontWeight::Bold)
                     ->color('success'),
-
                 TextColumn::make('category')
                     ->label('Kategori')
                     ->badge()

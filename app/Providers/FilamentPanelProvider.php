@@ -19,6 +19,8 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use App\Filament\Resources\ProdukResource;
 use App\Filament\Admin\Pages\Auth\Login;
+use Filament\Navigation\MenuItem;
+use Filament\Navigation\NavigationItem;
 
 class FilamentPanelProvider extends PanelProvider
 {
@@ -42,6 +44,20 @@ class FilamentPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
+            ])
+            ->userMenuItems([
+                'landing' => MenuItem::make()
+                    ->label('Landing Page')
+                    ->url('/')
+                    ->icon('heroicon-o-home')
+                    ->openUrlInNewTab(),
+            ])
+            ->navigationItems([
+                NavigationItem::make('Landing Page')
+                    ->url('/', shouldOpenInNewTab: true)
+                    ->icon('heroicon-o-home')
+                    ->group('External')
+                    ->sort(999),
             ])
             ->middleware([
                 EncryptCookies::class,
