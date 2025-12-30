@@ -46,7 +46,8 @@ class ProdukForm
                     ->helperText('Upload a 3D model file (e.g., .glb, .gltf).')
                     ->acceptedFileTypes(['model/gltf-binary', 'model/gltf+json', '.glb', '.gltf'])
                     ->directory('models')
-                    ->maxSize(10240),
+                    ->minSize(512)
+                    ->maxSize(50000),
                 CheckBox::make('is_available')
                     ->label('Available')
                     ->default(false),
