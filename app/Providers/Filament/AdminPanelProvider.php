@@ -34,7 +34,6 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Blue,
             ])
             ->login() // Enable Filament Login UI
-            ->logoutUrl(route('admin.logout')) // Redirect logout to your controller
             ->registration(Register::class) // Enable Filament Registration UI
             ->emailVerification(false) // Disable email verification
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
@@ -51,7 +50,7 @@ class AdminPanelProvider extends PanelProvider
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
             ])
-            
+
             ->authMiddleware([
                 Authenticate::class,
             ])

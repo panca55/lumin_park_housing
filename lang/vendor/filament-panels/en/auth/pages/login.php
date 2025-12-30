@@ -17,6 +17,8 @@ return [
             'label' => 'Forgot password?',
         ],
 
+        
+
     ],
 
     'form' => [
