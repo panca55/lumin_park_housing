@@ -50,13 +50,6 @@ class ProdukForm
                     ->directory('models')
                     ->minSize(512)
                     ->maxSize(50000),
-                FileUpload::make('denah')
-                    ->label('Denah (Floor Plan)')
-                    ->disk('public')
-                    ->helperText('Upload floor plan image (only for rumah category).')
-                    ->directory('images/denah')
-                    ->image()
-                    ->hidden(fn($get) => $get('category') !== 'rumah'),
                 CheckBox::make('is_available')
                     ->label('Available')
                     ->default(false),
@@ -69,8 +62,7 @@ class ProdukForm
                             ->label('Gambar')
                             ->disk('public')
                             ->directory('images/produk')
-                            ->image()
-                            ->required(),
+                            ->image(),
                     ])
                     ->columnSpanFull()
                     ->defaultItems(0)
@@ -89,13 +81,33 @@ class ProdukForm
                             ->label('Panorama')
                             ->disk('public')
                             ->directory('images/panorama')
-                            ->image()
-                            ->required(),
+                            ->image(),
                     ])
                     ->columnSpanFull()
                     ->defaultItems(0)
                     ->addActionLabel('Tambah Panorama')
-                    ->collapsible(),
+                    ->collapsible()
+                    ->hidden(fn($get) => $get('category') !== 'rumah'),
+
+                Repeater::make('denahProduks')
+                    ->relationship()
+                    ->label('Denah Lantai')
+                    ->schema([
+                        TextInput::make('title')
+                            ->label('Judul Denah')
+                            ->placeholder('Contoh: Lantai 1, Lantai 2, dll.')
+                            ->maxLength(255),
+                        FileUpload::make('image')
+                            ->label('Denah')
+                            ->disk('public')
+                            ->directory('images/denah')
+                            ->image(),
+                    ])
+                    ->columnSpanFull()
+                    ->defaultItems(0)
+                    ->addActionLabel('Tambah Denah')
+                    ->collapsible()
+                    ->hidden(fn($get) => $get('category') !== 'rumah'),
             ]);
     }
 }

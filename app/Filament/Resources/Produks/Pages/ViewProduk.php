@@ -53,9 +53,9 @@ class ViewProduk extends ViewRecord
                     'is_available' => $record->is_available,
                     'created_at'   => $record->created_at,
                     'updated_at'   => $record->updated_at,
-                    'denah'        => $record->denah,
                     'gambar_produks' => $record->gambarProduks,
                     'panorama_produks' => $record->panoramaProduks,
+                    'denah_produks' => $record->denahProduks,
                 ])
                 ->columnSpanFull(),
         ]);

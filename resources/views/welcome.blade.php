@@ -351,6 +351,7 @@
             let currentPropertyData = null;
             let gambarScrollPosition = 0;
             let panoramaScrollPosition = 0;
+            let denahScrollPosition = 0;
             let allPanoramas = [];
 
             function openModal(property) {
@@ -471,10 +472,21 @@
 
                 // Update denah (floor plan)
                 const denahSection = document.getElementById('modalDenah');
-                const denahImage = document.getElementById('modalDenahImage');
-                if (property.denah && property.category === 'rumah') {
-                    denahImage.src = property.denah;
+                const denahCarousel = document.getElementById('denahCarousel');
+                const denahTrack = document.getElementById('denahTrack');
+                if (property.denah_produks && property.denah_produks.length > 0 && property.category === 'rumah') {
+                    denahTrack.innerHTML = '';
+                    property.denah_produks.forEach(denah => {
+                        const imgDiv = document.createElement('div');
+                        imgDiv.className = 'carousel-item-modal';
+                        imgDiv.innerHTML = `<img src="${denah.image}" alt="${denah.title}" class="w-full h-full object-cover">`;
+                        imgDiv.onclick = () => window.open(denah.image, '_blank');
+                        denahTrack.appendChild(imgDiv);
+                    });
+                    denahCarousel.style.display = 'block';
                     denahSection.style.display = 'block';
+                    denahScrollPosition = 0;
+                    denahTrack.style.transform = 'translateX(0)';
                 } else {
                     denahSection.style.display = 'none';
                 }
@@ -520,6 +532,19 @@
                 panoramaScrollPosition = Math.max(0, Math.min(panoramaScrollPosition, maxScroll));
 
                 track.style.transform = `translateX(-${panoramaScrollPosition}px)`;
+            }
+
+            function scrollDenahCarousel(direction) {
+                const track = document.getElementById('denahTrack');
+                const container = track.parentElement;
+                const itemWidth = 160 + 12;
+
+                denahScrollPosition += direction * itemWidth * 3;
+
+                const maxScroll = Math.max(0, (track.children.length * itemWidth) - container.offsetWidth);
+                denahScrollPosition = Math.max(0, Math.min(denahScrollPosition, maxScroll));
+
+                track.style.transform = `translateX(-${denahScrollPosition}px)`;
             }
 
             let panoramaViewer = null;
@@ -787,6 +812,7 @@
                 currentPropertyData = null;
                 gambarScrollPosition = 0;
                 panoramaScrollPosition = 0;
+                denahScrollPosition = 0;
                 allPanoramas = [];
 
                 // Clean up 3D viewer
@@ -882,6 +908,7 @@
             window.contactDeveloper = contactDeveloper;
             window.scrollGambarCarousel = scrollGambarCarousel;
             window.scrollPanoramaCarousel = scrollPanoramaCarousel;
+            window.scrollDenahCarousel = scrollDenahCarousel;
             window.openPanoramaModal = openPanoramaModal;
             window.closePanoramaModal = closePanoramaModal;
         </script>
@@ -1119,13 +1146,16 @@
                                 'image' => $katalog->image ? Storage::url($katalog->image) : 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600',
                                 'model3d' => $katalog->model_3d ? Storage::url($katalog->model_3d) : '/storage/models/model-' . strtolower(str_replace(' ', '-', $katalog->type)) . '.glb',
                                 'description' => $katalog->description,
-                                'denah' => $katalog->denah ? Storage::url($katalog->denah) : null,
                                 'created_at' => $katalog->created_at->toISOString(),
                                 'updated_at' => $katalog->updated_at->toISOString(),
                                 'gambar_produks' => $katalog->gambarProduks->map(fn($g) => Storage::url($g->image))->toArray(),
                                 'panorama_produks' => $katalog->panoramaProduks->map(fn($p) => [
                                     'image' => Storage::url($p->image),
                                     'title' => $p->title ?? 'Panorama 360°'
+                                ])->toArray(),
+                                'denah_produks' => $katalog->denahProduks->map(fn($d) => [
+                                    'image' => Storage::url($d->image),
+                                    'title' => $d->title ?? 'Denah Lantai'
                                 ])->toArray()
                             ];
                         @endphp
@@ -1500,11 +1530,30 @@
                                             </div>
                                             <h3 class="text-lg font-bold text-gray-900">Denah Lantai</h3>
                                         </div>
-                                        <div class="rounded-xl bg-gray-50 border border-gray-200 p-4">
-                                            <div class="relative overflow-hidden rounded-lg">
-                                                <img id="modalDenahImage" src="" alt="Denah"
-                                                    class="w-2xl h-auto cursor-pointer"
-                                                    onclick="window.open(this.src, '_blank')" />
+                                        <div id="denahCarousel" class="rounded-xl bg-gray-50 border border-gray-200 p-4"
+                                            style="display: none;">
+                                            <div class="relative">
+                                                <div id="denahTrack" class="flex gap-3 overflow-x-auto pb-2"
+                                                    style="scrollbar-width: none; -ms-overflow-style: none;">
+                                                </div>
+                                                <button id="denahPrevBtn"
+                                                    class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white rounded-full w-9 h-9 flex items-center justify-center shadow-lg transition z-10"
+                                                    onclick="scrollDenahCarousel(-1)">
+                                                    <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                                    </svg>
+                                                </button>
+                                                <button id="denahNextBtn"
+                                                    class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white rounded-full w-9 h-9 flex items-center justify-center shadow-lg transition z-10"
+                                                    onclick="scrollDenahCarousel(1)">
+                                                    <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                                    </svg>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -1598,7 +1647,8 @@
             }
 
             #panoramaTrack .carousel-item-modal,
-            #gambarTrack .carousel-item-modal {
+            #gambarTrack .carousel-item-modal,
+            #denahTrack .carousel-item-modal {
                 flex-shrink: 0;
                 width: 160px;
                 height: 120px;
@@ -1609,12 +1659,14 @@
             }
 
             #panoramaTrack .carousel-item-modal:hover,
-            #gambarTrack .carousel-item-modal:hover {
+            #gambarTrack .carousel-item-modal:hover,
+            #denahTrack .carousel-item-modal:hover {
                 transform: scale(1.05);
             }
 
             #panoramaTrack .carousel-item-modal img,
-            #gambarTrack .carousel-item-modal img {
+            #gambarTrack .carousel-item-modal img,
+            #denahTrack .carousel-item-modal img {
                 width: 100%;
                 height: 100%;
                 object-fit: cover;

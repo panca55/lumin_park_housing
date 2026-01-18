@@ -17,6 +17,7 @@
         <!-- Three.js -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
         <!-- Pannellum for 360 Panorama -->
@@ -213,7 +214,12 @@
                 }
 
                 scene = new THREE.Scene();
-                scene.background = new THREE.Color(0xf0f4f8);
+                // Set background color based on theme
+                const updateSceneBackground = () => {
+                    const isDark = document.documentElement.classList.contains('dark');
+                    scene.background = new THREE.Color(isDark ? 0x1f2937 : 0xf0f4f8);
+                };
+                updateSceneBackground();
 
                 camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
                 camera.position.set(3, 2, 3);
@@ -263,6 +269,12 @@
 
                 // Load GLB model
                 const loader = new THREE.GLTFLoader();
+
+                // Configure DRACO loader for compressed models
+                const dracoLoader = new THREE.DRACOLoader();
+                dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+                loader.setDRACOLoader(dracoLoader);
+
                 loader.load(
                     modelPath,
                     function (gltf) {
@@ -302,9 +314,9 @@
                         console.log('Loading progress: ', (progress.loaded / progress.total * 100) + '%');
                     },
                     function (error) {
-                        console.error('Error loading model: ', error);
+                        console.error('Error loading 3D model: ', error);
                         if (loading) {
-                            loading.innerHTML = '<div class="text-red-500">Error loading 3D model</div>';
+                            loading.innerHTML = '<div class="text-red-500 text-center"><div class="text-lg font-semibold mb-2">❌ Error Loading 3D Model</div><div class="text-sm">The 3D model could not be loaded. Please try refreshing the page.</div></div>';
                         }
                     }
                 );
@@ -319,6 +331,22 @@
                     renderer.render(scene, camera);
                 }
             }
+
+            // Listen for theme changes to update 3D scene background
+            const themeObserver = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.attributeName === 'class') {
+                        const isDark = document.documentElement.classList.contains('dark');
+                        if (scene) {
+                            scene.background = new THREE.Color(isDark ? 0x1f2937 : 0xf0f4f8);
+                        }
+                    }
+                });
+            });
+            themeObserver.observe(document.documentElement, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
 
             let currentPropertyData = null;
             let gambarScrollPosition = 0;

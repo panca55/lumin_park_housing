@@ -17,7 +17,6 @@ class Produk extends Model
         'image',
         'model_3d',
         'is_available',
-        'denah',
     ];
 
     protected $casts = [
@@ -32,5 +31,10 @@ class Produk extends Model
     public function panoramaProduks(): HasMany
     {
         return $this->hasMany(PanoramaProduk::class);
+    }
+
+    public function denahProduks(): HasMany
+    {
+        return $this->hasMany(Denah::class);
     }
 }

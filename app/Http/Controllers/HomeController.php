@@ -11,7 +11,7 @@ class HomeController extends Controller
     public function index()
     {
         // Get available properties with related images and panoramas
-        $katalogs = Produk::with(['gambarProduks', 'panoramaProduks'])
+        $katalogs = Produk::with(['gambarProduks', 'panoramaProduks', 'denahProduks'])
             ->where('is_available', true)
             ->orderBy('created_at', 'desc')
             ->get();

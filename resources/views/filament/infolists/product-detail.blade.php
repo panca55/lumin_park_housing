@@ -836,7 +836,8 @@
             // Track scroll positions for each carousel
             const carouselPositions = {
                 gambar: 0,
-                panorama: 0
+                panorama: 0,
+                denah: 0
             };
 
             function scrollCarousel(type, direction) {
@@ -946,9 +947,9 @@
                     };
 
                     item.innerHTML = `
-                                        <img src="${imageUrl}" alt="${panorama.title || 'Panorama'}" loading="lazy">
-                                        <div class="panorama-nav-item-title">${panorama.title || `Panorama ${index + 1}`}</div>
-                                    `;
+                                            <img src="${imageUrl}" alt="${panorama.title || 'Panorama'}" loading="lazy">
+                                            <div class="panorama-nav-item-title">${panorama.title || `Panorama ${index + 1}`}</div>
+                                        `;
 
                     navItems.appendChild(item);
                 });
@@ -1057,17 +1058,41 @@
                 @endif
 
                 {{-- DENAH (Floor Plan) --}}
-                @if($denah && $category === 'rumah')
+                @if($denahProduks && $denahProduks->count() > 0 && $category === 'rumah')
                     <div class="gallery-section" style="margin-top: 24px;">
                         <div class="section-header">
                             <div class="header-line"></div>
                             <h3 class="section-title">🏠 Denah Lantai {{ $name }}</h3>
                         </div>
-                        <div class="denah-container"
-                            style="border-radius: 12px; overflow: hidden; border: 2px solid #e5e7eb; background: white;">
-                            <img src="{{ Storage::url($denah) }}" alt="Denah {{ $name }}"
-                                style="width: 100%; height: auto; display: block; cursor: pointer;"
-                                onclick="window.open('{{ Storage::url($denah) }}', '_blank')" loading="lazy">
+                        <div class="carousel-container">
+                            <div class="carousel-wrapper">
+                                <div class="carousel-track" id="denah-track">
+                                    @foreach($denahProduks as $denah)
+                                        <div class="carousel-item"
+                                            onclick="window.open('{{ Storage::url($denah->image) }}', '_blank')">
+                                            <img src="{{ Storage::url($denah->image) }}"
+                                                alt="{{ $denah->title ?? 'Denah Lantai' }}" loading="lazy">
+                                            @if($denah->title)
+                                                <div class="carousel-item-title">{{ $denah->title }}</div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @if($denahProduks->count() > 3)
+                                <button class="carousel-button carousel-button-prev" onclick="scrollCarousel('denah', -1)">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 19l-7-7 7-7"></path>
+                                    </svg>
+                                </button>
+                                <button class="carousel-button carousel-button-next" onclick="scrollCarousel('denah', 1)">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                                        </path>
+                                    </svg>
+                                </button>
+                            @endif
                         </div>
                     </div>
                 @endif

@@ -94,7 +94,7 @@ class ProduksTable
             /**
              * 🚨 BULK ACTIONS
              */
-            ->selectable(fn() => Auth::user()?->hasRole('user'))
+            ->selectable()
             ->bulkActions([
                 /**
                  * 🟢 WHATSAPP MEETING (USER & ADMIN - SELALU VISIBLE)

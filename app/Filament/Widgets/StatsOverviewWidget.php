@@ -26,16 +26,6 @@ class StatsOverviewWidget extends BaseStatsOverviewWidget
                 ->description('Products that are available for sale')
                 ->descriptionIcon('heroicon-m-check-circle')
                 ->color('warning'),
-
-            Stat::make('Pending Payments', $pendingPayments)
-                ->description('Payments waiting for approval')
-                ->descriptionIcon('heroicon-m-clock')
-                ->color('danger'),
-
-            Stat::make('Total Revenue', 'Rp ' . number_format($totalRevenue, 0, ',', '.'))
-                ->description('Revenue from approved payments')
-                ->descriptionIcon('heroicon-m-banknotes')
-                ->color('primary'),
         ];
     }
 }
