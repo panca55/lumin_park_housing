@@ -1117,11 +1117,13 @@
 
                                 <!-- Badges -->
                                 <div class="absolute top-4 right-4">
-                                    <span
-                                        class="badge-type inline-block text-white px-4 py-2 text-xs font-bold rounded-full shadow-lg backdrop-blur-sm">
-                                        <?php echo e($katalog->type); ?>
+                                    <?php if($katalog->category === 'rumah'): ?>
+                                        <span
+                                            class="badge-type inline-block text-white px-4 py-2 text-xs font-bold rounded-full shadow-lg backdrop-blur-sm">
+                                            Tipe <?php echo e($katalog->type); ?>
 
-                                    </span>
+                                        </span>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="absolute top-4 left-4">
                                     <span
