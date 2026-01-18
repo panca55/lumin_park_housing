@@ -947,9 +947,9 @@
                     };
 
                     item.innerHTML = `
-                                            <img src="${imageUrl}" alt="${panorama.title || 'Panorama'}" loading="lazy">
-                                            <div class="panorama-nav-item-title">${panorama.title || `Panorama ${index + 1}`}</div>
-                                        `;
+                                                <img src="${imageUrl}" alt="${panorama.title || 'Panorama'}" loading="lazy">
+                                                <div class="panorama-nav-item-title">${panorama.title || `Panorama ${index + 1}`}</div>
+                                            `;
 
                     navItems.appendChild(item);
                 });
@@ -1058,7 +1058,7 @@
                 @endif
 
                 {{-- DENAH (Floor Plan) --}}
-                @if($denahProduks && $denahProduks->count() > 0 && $category === 'rumah')
+                @if($denah_produks && $denah_produks->count() > 0 && $category === 'rumah')
                     <div class="gallery-section" style="margin-top: 24px;">
                         <div class="section-header">
                             <div class="header-line"></div>
@@ -1067,7 +1067,7 @@
                         <div class="carousel-container">
                             <div class="carousel-wrapper">
                                 <div class="carousel-track" id="denah-track">
-                                    @foreach($denahProduks as $denah)
+                                    @foreach($denah_produks as $denah)
                                         <div class="carousel-item"
                                             onclick="window.open('{{ Storage::url($denah->image) }}', '_blank')">
                                             <img src="{{ Storage::url($denah->image) }}"
@@ -1079,7 +1079,7 @@
                                     @endforeach
                                 </div>
                             </div>
-                            @if($denahProduks->count() > 3)
+                            @if($denah_produks->count() > 3)
                                 <button class="carousel-button carousel-button-prev" onclick="scrollCarousel('denah', -1)">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

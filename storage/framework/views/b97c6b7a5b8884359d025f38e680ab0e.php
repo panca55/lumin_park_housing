@@ -836,7 +836,8 @@
             // Track scroll positions for each carousel
             const carouselPositions = {
                 gambar: 0,
-                panorama: 0
+                panorama: 0,
+                denah: 0
             };
 
             function scrollCarousel(type, direction) {
@@ -946,9 +947,9 @@
                     };
 
                     item.innerHTML = `
-                                        <img src="${imageUrl}" alt="${panorama.title || 'Panorama'}" loading="lazy">
-                                        <div class="panorama-nav-item-title">${panorama.title || `Panorama ${index + 1}`}</div>
-                                    `;
+                                            <img src="${imageUrl}" alt="${panorama.title || 'Panorama'}" loading="lazy">
+                                            <div class="panorama-nav-item-title">${panorama.title || `Panorama ${index + 1}`}</div>
+                                        `;
 
                     navItems.appendChild(item);
                 });
@@ -1057,17 +1058,41 @@
                 <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
 
                 
-                <!--[if BLOCK]><![endif]--><?php if($denah && $category === 'rumah'): ?>
+                <!--[if BLOCK]><![endif]--><?php if($denah_produks && $denah_produks->count() > 0 && $category === 'rumah'): ?>
                     <div class="gallery-section" style="margin-top: 24px;">
                         <div class="section-header">
                             <div class="header-line"></div>
                             <h3 class="section-title">🏠 Denah Lantai <?php echo e($name); ?></h3>
                         </div>
-                        <div class="denah-container"
-                            style="border-radius: 12px; overflow: hidden; border: 2px solid #e5e7eb; background: white;">
-                            <img src="<?php echo e(Storage::url($denah)); ?>" alt="Denah <?php echo e($name); ?>"
-                                style="width: 100%; height: auto; display: block; cursor: pointer;"
-                                onclick="window.open('<?php echo e(Storage::url($denah)); ?>', '_blank')" loading="lazy">
+                        <div class="carousel-container">
+                            <div class="carousel-wrapper">
+                                <div class="carousel-track" id="denah-track">
+                                    <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $denah_produks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $denah): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <div class="carousel-item"
+                                            onclick="window.open('<?php echo e(Storage::url($denah->image)); ?>', '_blank')">
+                                            <img src="<?php echo e(Storage::url($denah->image)); ?>"
+                                                alt="<?php echo e($denah->title ?? 'Denah Lantai'); ?>" loading="lazy">
+                                            <!--[if BLOCK]><![endif]--><?php if($denah->title): ?>
+                                                <div class="carousel-item-title"><?php echo e($denah->title); ?></div>
+                                            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                        </div>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                                </div>
+                            </div>
+                            <!--[if BLOCK]><![endif]--><?php if($denah_produks->count() > 3): ?>
+                                <button class="carousel-button carousel-button-prev" onclick="scrollCarousel('denah', -1)">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 19l-7-7 7-7"></path>
+                                    </svg>
+                                </button>
+                                <button class="carousel-button carousel-button-next" onclick="scrollCarousel('denah', 1)">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                                        </path>
+                                    </svg>
+                                </button>
+                            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                         </div>
                     </div>
                 <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
