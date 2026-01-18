@@ -20,27 +20,4 @@ return [
 
     'system_route_prefix' => 'filament',
 
-    /*
-    |--------------------------------------------------------------------------
-    | Filament Authentication Settings
-    |--------------------------------------------------------------------------
-    */
-    'auth' => [
-        'guard' => 'web', // gunakan guard default Laravel
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Custom Authentication Pages
-    |--------------------------------------------------------------------------
-    | Gunakan halaman login custom: /admin/login
-    */
-    'login_url' => '/admin/login',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Redirect setelah berhasil login/logout
-    |--------------------------------------------------------------------------
-    */
-    'home_url' => fn() => route('filament.admin.pages.dashboard'),
 ];

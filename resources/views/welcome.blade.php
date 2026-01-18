@@ -13,9 +13,15 @@
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+
+        <!-- Three.js -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+        <!-- Pannellum for 360 Panorama -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
+        <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
@@ -314,29 +320,135 @@
                 }
             }
 
+            let currentPropertyData = null;
+            let gambarScrollPosition = 0;
+            let panoramaScrollPosition = 0;
+            let allPanoramas = [];
+
             function openModal(property) {
                 const modal = document.getElementById('propertyModal');
                 if (!modal) return;
 
+                currentPropertyData = property;
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
 
-                const modalName = document.getElementById('modalName');
-                const modalPrice = document.getElementById('modalPrice');
-                const modalBedrooms = document.getElementById('modalBedrooms');
-                const modalBathrooms = document.getElementById('modalBathrooms');
-                const modalArea = document.getElementById('modalArea');
+                // Update hero image
+                const heroImage = document.getElementById('modalHeroImage');
+                if (heroImage && property.gambar_produks && property.gambar_produks.length > 0) {
+                    heroImage.src = property.gambar_produks[0];
+                } else if (heroImage) {
+                    heroImage.src = '/images/default-property.jpg';
+                }
 
-                if (modalName) modalName.textContent = property.name;
-                if (modalPrice) modalPrice.textContent = property.price;
-                if (modalBedrooms) modalBedrooms.textContent = 'N/A';
-                if (modalBathrooms) modalBathrooms.textContent = 'N/A';
-                if (modalArea) modalArea.textContent = 'N/A';
-
+                // Update status
                 const statusElement = document.getElementById('modalStatus');
                 if (statusElement) {
-                    statusElement.textContent = property.status === 'available' ? 'Tersedia' : 'Tidak Tersedia';
-                    statusElement.className = property.status === 'available' ? 'px-4 py-1 rounded-full text-sm font-semibold bg-green-500 text-white' : 'px-4 py-1 rounded-full text-sm font-semibold bg-yellow-500 text-white';
+                    if (property.status === 'available') {
+                        statusElement.textContent = '✓ Tersedia';
+                        statusElement.className = 'inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold text-white shadow-xl bg-gradient-to-r from-green-500 to-emerald-600';
+                    } else {
+                        statusElement.textContent = '✗ Tidak Tersedia';
+                        statusElement.className = 'inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold text-white shadow-xl bg-gradient-to-r from-yellow-500 to-orange-600';
+                    }
+                }
+
+                // Update name and price
+                const modalName = document.getElementById('modalName');
+                const modalPrice = document.getElementById('modalPrice');
+                if (modalName) modalName.textContent = property.name;
+                if (modalPrice) modalPrice.textContent = property.price;
+
+                // Update tags
+                const tagsContainer = document.getElementById('modalTags');
+                if (tagsContainer) {
+                    tagsContainer.innerHTML = '';
+                    if (property.category) {
+                        const catTag = document.createElement('span');
+                        catTag.className = 'inline-flex items-center px-3 py-1.5 bg-blue-100 text-blue-800 text-xs font-semibold rounded-lg';
+                        catTag.innerHTML = `<svg class="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>${property.category}`;
+                        tagsContainer.appendChild(catTag);
+                    }
+                    if (property.type) {
+                        const typeTag = document.createElement('span');
+                        typeTag.className = 'inline-flex items-center px-3 py-1.5 bg-purple-100 text-purple-800 text-xs font-semibold rounded-lg';
+                        typeTag.innerHTML = `<svg class="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"></path></svg>${property.type}`;
+                        tagsContainer.appendChild(typeTag);
+                    }
+                }
+
+                // Update description
+                const descSection = document.getElementById('modalDescriptionSection');
+                const descContent = document.getElementById('modalDescription');
+                if (property.description) {
+                    if (descContent) descContent.textContent = property.description;
+                    if (descSection) descSection.style.display = 'block';
+                } else {
+                    if (descSection) descSection.style.display = 'none';
+                }
+
+                // Update metadata
+                const metadataContainer = document.getElementById('modalMetadata');
+                if (metadataContainer && property.created_at) {
+                    metadataContainer.innerHTML = `
+                        <div class="space-y-1">
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Dibuat</p>
+                            <p class="text-sm font-bold text-gray-900">${new Date(property.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Diperbarui</p>
+                            <p class="text-sm font-bold text-gray-900">${new Date(property.updated_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        </div>
+                    `;
+                }
+
+                // Update gambar carousel
+                const gambarGallery = document.getElementById('modalGambarGallery');
+                const gambarTrack = document.getElementById('gambarTrack');
+                if (property.gambar_produks && property.gambar_produks.length > 0) {
+                    gambarTrack.innerHTML = '';
+                    property.gambar_produks.forEach(img => {
+                        const imgDiv = document.createElement('div');
+                        imgDiv.className = 'carousel-item-modal';
+                        imgDiv.innerHTML = `<img src="${img}" alt="Gambar Produk" class="w-full h-full object-cover">`;
+                        imgDiv.onclick = () => window.open(img, '_blank');
+                        gambarTrack.appendChild(imgDiv);
+                    });
+                    gambarGallery.style.display = 'block';
+                    gambarScrollPosition = 0;
+                    gambarTrack.style.transform = 'translateX(0)';
+                } else {
+                    gambarGallery.style.display = 'none';
+                }
+
+                // Update panorama carousel
+                const panoramaGallery = document.getElementById('modalPanoramaGallery');
+                const panoramaTrack = document.getElementById('panoramaTrack');
+                if (property.panorama_produks && property.panorama_produks.length > 0) {
+                    allPanoramas = property.panorama_produks;
+                    panoramaTrack.innerHTML = '';
+                    property.panorama_produks.forEach((item, index) => {
+                        const imgDiv = document.createElement('div');
+                        imgDiv.className = 'carousel-item-modal';
+                        imgDiv.innerHTML = `<img src="${item.image}" alt="${item.title || 'Panorama'}" class="w-full h-full object-cover">`;
+                        imgDiv.onclick = () => openPanoramaModal(index);
+                        panoramaTrack.appendChild(imgDiv);
+                    });
+                    panoramaGallery.style.display = 'block';
+                    panoramaScrollPosition = 0;
+                    panoramaTrack.style.transform = 'translateX(0)';
+                } else {
+                    panoramaGallery.style.display = 'none';
+                }
+
+                // Update denah (floor plan)
+                const denahSection = document.getElementById('modalDenah');
+                const denahImage = document.getElementById('modalDenahImage');
+                if (property.denah && property.category === 'rumah') {
+                    denahImage.src = property.denah;
+                    denahSection.style.display = 'block';
+                } else {
+                    denahSection.style.display = 'none';
                 }
 
                 document.body.style.overflow = 'hidden';
@@ -346,7 +458,6 @@
                     if (property.model3d) {
                         init3DViewer(property.model3d);
                     } else {
-                        // Tampilkan pesan bahwa model tidak tersedia
                         const container = document.getElementById('viewer3d');
                         const loading = document.getElementById('viewer-loading');
                         if (loading) loading.style.display = 'none';
@@ -357,6 +468,285 @@
                 }, 100);
             }
 
+            function scrollGambarCarousel(direction) {
+                const track = document.getElementById('gambarTrack');
+                const container = track.parentElement;
+                const itemWidth = 160 + 12; // width + gap
+
+                gambarScrollPosition += direction * itemWidth * 3;
+
+                const maxScroll = Math.max(0, (track.children.length * itemWidth) - container.offsetWidth);
+                gambarScrollPosition = Math.max(0, Math.min(gambarScrollPosition, maxScroll));
+
+                track.style.transform = `translateX(-${gambarScrollPosition}px)`;
+            }
+
+            function scrollPanoramaCarousel(direction) {
+                const track = document.getElementById('panoramaTrack');
+                const container = track.parentElement;
+                const itemWidth = 160 + 12;
+
+                panoramaScrollPosition += direction * itemWidth * 3;
+
+                const maxScroll = Math.max(0, (track.children.length * itemWidth) - container.offsetWidth);
+                panoramaScrollPosition = Math.max(0, Math.min(panoramaScrollPosition, maxScroll));
+
+                track.style.transform = `translateX(-${panoramaScrollPosition}px)`;
+            }
+
+            let panoramaViewer = null;
+
+            function openPanoramaModal(index) {
+                console.log('🔵 Opening panorama modal, index:', index);
+
+                const modalPanorama = document.getElementById('panorama-modal');
+
+                if (!modalPanorama) {
+                    alert('❌ Modal panorama tidak ditemukan!');
+                    return;
+                }
+
+                if (!allPanoramas || allPanoramas.length === 0) {
+                    alert('❌ Data panorama tidak tersedia!');
+                    return;
+                }
+
+                console.log('✅ Modal found, panoramas:', allPanoramas.length);
+
+                // FORCE SHOW dengan cara paling agresif
+                modalPanorama.className = 'fixed inset-0 flex items-center justify-center';
+                modalPanorama.style.cssText = `
+                    display: flex !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    z-index: 999999 !important;
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    bottom: 0 !important;
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    background-color: rgba(0, 0, 0, 0.95) !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                `;
+
+                // Ensure it's at body level
+                if (modalPanorama.parentElement !== document.body) {
+                    document.body.appendChild(modalPanorama);
+                }
+
+                // Debug info
+                const rect = modalPanorama.getBoundingClientRect();
+                console.log('📊 Modal rect:', {
+                    width: rect.width,
+                    height: rect.height,
+                    top: rect.top,
+                    left: rect.left
+                });
+
+                console.log('✅ MODAL SHOULD BE VISIBLE NOW!');
+
+
+                const viewer = document.getElementById('panorama-viewer');
+                const title = document.getElementById('panorama-title');
+                const closeBtn = modalPanorama.querySelector('button');
+                const innerContainer = modalPanorama.querySelector('div[onclick="event.stopPropagation()"]');
+
+                // Style inner container first
+                if (innerContainer) {
+                    innerContainer.style.cssText = 'position: relative !important; z-index: 1000001 !important; display: block !important; width: 90% !important; height: 90% !important; max-width: 1400px !important; background-color: rgb(17, 24, 39) !important; border-radius: 1rem !important; overflow: hidden !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;';
+                    console.log('✅ Inner container styled');
+                }
+
+                if (viewer) {
+                    viewer.style.cssText = 'width: 100% !important; height: 100% !important; z-index: 1000002 !important; display: block !important; position: relative !important;';
+                    console.log('✅ Viewer styled');
+                }
+                if (title) {
+                    title.style.cssText = 'position: absolute !important; top: 1.25rem !important; left: 1.25rem !important; z-index: 1000003 !important; display: block !important; color: white !important; background-color: rgba(0, 0, 0, 0.7) !important; padding: 0.75rem 1.25rem !important; border-radius: 0.75rem !important; font-size: 1rem !important; font-weight: 600 !important;';
+                    console.log('✅ Title styled');
+                }
+                if (closeBtn) {
+                    closeBtn.style.cssText = 'position: absolute !important; top: 1.25rem !important; right: 1.25rem !important; z-index: 1000003 !important; display: flex !important; align-items: center !important; justify-content: center !important; width: 3rem !important; height: 3rem !important; background-color: rgba(255, 255, 255, 0.9) !important; border-radius: 9999px !important; cursor: pointer !important;';
+                    console.log('✅ Close button styled');
+                }
+                setTimeout(() => {
+                    loadPanoramaViewer(index);
+                }, 100);
+            }
+
+            function loadPanoramaViewer(index) {
+                console.log('Loading panorama viewer, index:', index);
+
+                const viewer = document.getElementById('panorama-viewer');
+                const titleEl = document.getElementById('panorama-title');
+                const navPanel = document.getElementById('panorama-nav');
+                const navItems = document.getElementById('panorama-nav-items');
+
+                if (!allPanoramas || allPanoramas.length === 0) {
+                    console.error('No panoramas in loadPanoramaViewer');
+                    return;
+                }
+
+                if (index < 0 || index >= allPanoramas.length) {
+                    console.error('Invalid panorama index:', index);
+                    return;
+                }
+
+                const panorama = allPanoramas[index];
+                console.log('Loading panorama:', panorama);
+
+                if (titleEl) {
+                    titleEl.textContent = panorama.title || `Panorama ${index + 1}`;
+                }
+
+                // Clear previous viewer
+                if (panoramaViewer) {
+                    try {
+                        panoramaViewer.destroy();
+                    } catch (e) {
+                        console.warn('Error destroying previous viewer:', e);
+                    }
+                    panoramaViewer = null;
+                }
+
+                // Clear viewer container
+                viewer.innerHTML = '';
+
+                // Check if Pannellum is loaded
+                if (typeof pannellum === 'undefined') {
+                    console.error('Pannellum library not loaded');
+                    viewer.innerHTML = '<div class="flex items-center justify-center h-full text-white"><p>Gagal memuat library panorama. Silakan refresh halaman.</p></div>';
+                    return;
+                }
+
+                // Initialize Pannellum
+                try {
+                    panoramaViewer = pannellum.viewer(viewer, {
+                        type: 'equirectangular',
+                        panorama: panorama.image,
+                        autoLoad: true,
+                        showControls: true,
+                        mouseZoom: true,
+                        autoRotate: -2,
+                        compass: false,
+                        hfov: 110
+                    });
+                    console.log('Panorama viewer initialized successfully');
+                } catch (error) {
+                    console.error('Error initializing Pannellum:', error);
+                    viewer.innerHTML = '<div class="flex items-center justify-center h-full text-white"><p>Error loading panorama: ' + error.message + '</p></div>';
+                    return;
+                }
+
+                // Update navigation
+                console.log('🔍 Total panoramas:', allPanoramas.length);
+
+                // Always show navigation if there's at least 1 panorama
+                if (allPanoramas.length >= 1) {
+                    navItems.innerHTML = '';
+
+                    // Update counter
+                    const counter = document.getElementById('panorama-counter');
+                    if (counter) {
+                        counter.textContent = `${index + 1} / ${allPanoramas.length}`;
+                    }
+
+                    allPanoramas.forEach((p, i) => {
+                        const navItem = document.createElement('div');
+                        const isActive = i === index;
+
+                        // Container with proper styling - border untuk active state
+                        navItem.className = `relative overflow-hidden rounded-xl cursor-pointer transition-all duration-300 flex-shrink-0`;
+                        navItem.style.width = '120px';
+                        navItem.style.height = '90px';
+
+                        // Inline style untuk border yang pasti muncul
+                        if (isActive) {
+                            navItem.style.cssText += `
+                                border: 4px solid #60a5fa !important;
+                                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 20px rgba(96, 165, 250, 0.5) !important;
+                                transform: scale(1.05) !important;
+                                opacity: 1 !important;
+                            `;
+                        } else {
+                            navItem.style.cssText += `
+                                border: 2px solid transparent !important;
+                                opacity: 0.6 !important;
+                            `;
+                        }
+
+                        // Create inner HTML with image and overlay - tanpa teks AKTIF
+                        navItem.innerHTML = `
+                            <img src="${p.image}" alt="${p.title || 'Panorama'}" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-2">
+                                <div class="w-full">
+                                    <p class="text-white text-xs font-semibold truncate ${isActive ? 'text-blue-400' : ''}">${p.title || `Panorama ${i + 1}`}</p>
+                                </div>
+                            </div>
+                        `;
+
+                        navItem.onmouseover = () => {
+                            if (!isActive) navItem.style.opacity = '1';
+                        };
+                        navItem.onmouseout = () => {
+                            if (!isActive) navItem.style.opacity = '0.6';
+                        };
+
+                        navItem.onclick = () => loadPanoramaViewer(i);
+                        navItems.appendChild(navItem);
+                    });
+
+                    console.log('✅ Navigation items created:', navItems.children.length);
+
+                    // Force display with aggressive styling
+                    navPanel.style.cssText = 'display: block !important; position: absolute !important; bottom: 20px !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 1000002 !important; visibility: visible !important; opacity: 1 !important;';
+
+                    console.log('✅ Navigation panel displayed');
+                    console.log('📊 Panel rect:', navPanel.getBoundingClientRect());
+                } else {
+                    console.log('❌ No panoramas to display');
+                    navPanel.style.display = 'none';
+                }
+            }
+
+            function closePanoramaModal(event) {
+                console.log('Closing panorama modal');
+
+                // If no event, just close (called programmatically or from close button directly)
+                if (!event) {
+                    console.log('No event, closing modal');
+                } else {
+                    // If event exists, check if it's backdrop click
+                    if (event.target.id === 'panorama-modal') {
+                        console.log('Backdrop clicked, closing modal');
+                    } else {
+                        // Check if click is on close button or its children
+                        const closeButton = event.target.closest('button');
+                        if (closeButton) {
+                            console.log('Close button clicked, closing modal');
+                        } else {
+                            console.log('Click inside modal content, ignoring');
+                            return;
+                        }
+                    }
+                }
+
+                const modal = document.getElementById('panorama-modal');
+                if (modal) {
+                    modal.classList.remove('flex');
+                    modal.classList.add('hidden');
+                    modal.style.cssText = '';
+                }
+
+                if (panoramaViewer) {
+                    panoramaViewer.destroy();
+                    panoramaViewer = null;
+                }
+            }
+
             function closeModal() {
                 const modal = document.getElementById('propertyModal');
                 if (modal) {
@@ -364,6 +754,12 @@
                     modal.classList.remove('flex');
                 }
                 document.body.style.overflow = 'auto';
+
+                // Reset data
+                currentPropertyData = null;
+                gambarScrollPosition = 0;
+                panoramaScrollPosition = 0;
+                allPanoramas = [];
 
                 // Clean up 3D viewer
                 if (controls) {
@@ -390,7 +786,7 @@
             function scheduleVisit() {
                 // Cek apakah user sudah login
                 const isAuthenticated = {{ Auth::check() ? 'true' : 'false' }};
-                
+
                 if (!isAuthenticated) {
                     alert('Silakan login terlebih dahulu untuk menjadwalkan kunjungan');
                     window.location.href = '/dashboard/login';
@@ -401,7 +797,7 @@
                 const propertyName = modalName ? modalName.textContent : 'Properti';
                 const userName = '{{ Auth::check() ? Auth::user()->name : "" }}';
                 const userEmail = '{{ Auth::check() ? Auth::user()->email : "" }}';
-                
+
                 const message = `Halo, saya tertarik untuk menjadwalkan kunjungan\n\n` +
                     `━━━━━━━━━━━━━━━━━━━━━━\n` +
                     `🏠 *PROPERTI*\n` +
@@ -414,14 +810,14 @@
                     `Email: ${userEmail}\n\n` +
                     `Mohon informasi jadwal kunjungan yang tersedia.\n` +
                     `Terima kasih 🙏`;
-                
+
                 window.open(`https://wa.me/6285664954621?text=${encodeURIComponent(message)}`, '_blank');
             }
 
             function contactDeveloper() {
                 // Cek apakah user sudah login
                 const isAuthenticated = {{ Auth::check() ? 'true' : 'false' }};
-                
+
                 if (!isAuthenticated) {
                     alert('Silakan login terlebih dahulu untuk menghubungi developer');
                     window.location.href = '/dashboard/login';
@@ -432,7 +828,7 @@
                 const propertyName = modalName ? modalName.textContent : 'Properti';
                 const userName = '{{ Auth::check() ? Auth::user()->name : "" }}';
                 const userEmail = '{{ Auth::check() ? Auth::user()->email : "" }}';
-                
+
                 const message = `Halo Admin Lumin Park 👋\n\n` +
                     `Saya ingin mendapatkan informasi lebih lanjut\n\n` +
                     `━━━━━━━━━━━━━━━━━━━━━━\n` +
@@ -446,7 +842,7 @@
                     `Email: ${userEmail}\n\n` +
                     `Mohon informasi detail dan harga terbaik.\n` +
                     `Terima kasih 🙏`;
-                
+
                 window.open(`https://wa.me/6285664954621?text=${encodeURIComponent(message)}`, '_blank');
             }
 
@@ -456,6 +852,10 @@
             window.closeModalOnBackdrop = closeModalOnBackdrop;
             window.scheduleVisit = scheduleVisit;
             window.contactDeveloper = contactDeveloper;
+            window.scrollGambarCarousel = scrollGambarCarousel;
+            window.scrollPanoramaCarousel = scrollPanoramaCarousel;
+            window.openPanoramaModal = openPanoramaModal;
+            window.closePanoramaModal = closePanoramaModal;
         </script>
         <!-- Styles / Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -481,12 +881,14 @@
                     </div>
                     <div class="hidden md:flex items-center space-x-4">
                         @auth
-                            <a href="/dashboard" class="text-gray-700 hover:text-blue-600 transition font-medium">
+                            <a href="/dashboard"
+                                class="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg font-medium">
                                 Dashboard
                             </a>
                             <form method="POST" action="/logout" class="inline">
                                 @csrf
-                                <button type="submit" class="px-4 py-2 text-gray-700 hover:text-blue-600 transition font-medium">
+                                <button type="submit"
+                                    class="px-6 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-all duration-300 font-medium">
                                     Logout
                                 </button>
                             </form>
@@ -494,7 +896,8 @@
                             <a href="/dashboard/login" class="text-gray-700 hover:text-blue-600 transition font-medium">
                                 Login
                             </a>
-                            <a href="/dashboard/register" class="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg font-medium">
+                            <a href="/dashboard/register"
+                                class="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg font-medium">
                                 Register
                             </a>
                         @endauth
@@ -682,11 +1085,20 @@
                                 'id' => $katalog->id,
                                 'name' => $katalog->name,
                                 'category' => $katalog->category,
+                                'type' => $katalog->type,
                                 'price' => 'Rp ' . number_format((float) $katalog->price, 0, ',', '.'),
                                 'status' => $katalog->is_available ? 'available' : 'reserved',
                                 'image' => $katalog->image ? Storage::url($katalog->image) : 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600',
                                 'model3d' => $katalog->model_3d ? Storage::url($katalog->model_3d) : '/storage/models/model-' . strtolower(str_replace(' ', '-', $katalog->type)) . '.glb',
-                                'description' => $katalog->description
+                                'description' => $katalog->description,
+                                'denah' => $katalog->denah ? Storage::url($katalog->denah) : null,
+                                'created_at' => $katalog->created_at->toISOString(),
+                                'updated_at' => $katalog->updated_at->toISOString(),
+                                'gambar_produks' => $katalog->gambarProduks->map(fn($g) => Storage::url($g->image))->toArray(),
+                                'panorama_produks' => $katalog->panoramaProduks->map(fn($p) => [
+                                    'image' => Storage::url($p->image),
+                                    'title' => $p->title ?? 'Panorama 360°'
+                                ])->toArray()
                             ];
                         @endphp
 
@@ -742,7 +1154,8 @@
                                 <p class="price-tag text-3xl font-extrabold mb-3">{{ $property['price'] }}</p>
                                 @if($katalog->description)
                                     <p class="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-4">
-                                        {{ Str::limit($katalog->description, 100) }}</p>
+                                        {{ Str::limit($katalog->description, 100) }}
+                                    </p>
                                 @endif
 
                                 <!-- Action Button -->
@@ -873,61 +1286,310 @@
         </footer>
 
         <!-- Modal -->
-        <div id="propertyModal" class="fixed inset-0 bg-black/25 hidden items-center justify-center z-50 p-4"
+        <div id="propertyModal"
+            class="fixed inset-0 bg-black/90 hidden items-center justify-center z-50 p-1 sm:p-2 md:p-4"
             onclick="closeModalOnBackdrop(event)">
-            <div class="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto"
+            <div class="bg-white rounded-2xl w-full max-w-3xl sm:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl h-full max-h-[80vh] sm:max-h-[85vh] md:max-h-[90vh] overflow-hidden flex flex-col"
                 onclick="event.stopPropagation()">
-                <div class="relative">
+                <!-- Modal Header -->
+                <div class="flex-shrink-0 relative p-3 sm:p-4 border-b border-gray-200">
                     <button onclick="closeModal()"
-                        class="absolute top-4 right-4 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition z-10">
+                        class="absolute top-3 right-3 sm:top-4 sm:right-4 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition z-50">
                         <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M6 18L18 6M6 6l12 12">
                             </path>
                         </svg>
                     </button>
+                </div>
 
-                    <!-- 3D Viewer Container -->
-                    <div id="viewer3d" class="w-full h-96 bg-gradient-to-br from-gray-100 to-gray-200 relative">
-                        <div id="viewer-loading" class="absolute inset-0 flex items-center justify-center z-10">
-                            <div class="text-center">
-                                <div
-                                    class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4">
+                <!-- Modal Content (Scrollable) -->
+                <div class="flex-1 overflow-y-auto">
+                    <!-- Product Detail Container -->
+                    <div class="p-4 sm:p-6">
+                        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+
+                            <!-- LEFT: 3D VIEWER -->
+                            <div class="viewer-wrapper-modal">
+                                <div id="viewer3d"
+                                    class="viewer-container-modal relative w-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl overflow-hidden border-2 border-gray-200 shadow-xl"
+                                    style="aspect-ratio: 4/3; min-height: 300px; max-height: 500px;">
+                                    <div id="viewer-loading"
+                                        class="absolute inset-0 flex items-center justify-center z-10">
+                                        <div class="text-center">
+                                            <div
+                                                class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4">
+                                            </div>
+                                            <p class="text-gray-600">Loading 3D Model...</p>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="absolute bottom-4 left-4 bg-black/70 text-white text-xs px-3 py-2 rounded-lg z-10">
+                                        🖱️ Drag to rotate • 🔍 Scroll to zoom
+                                    </div>
                                 </div>
-                                <p class="text-gray-600">Loading 3D Model...</p>
+
+                                <!-- GALLERY PANORAMA (Below 3D Model) -->
+                                <div id="modalPanoramaGallery" class="mt-6" style="display: none;">
+                                    <div class="flex items-center gap-3 mb-3">
+                                        <div class="w-1 h-6 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full">
+                                        </div>
+                                        <h3 class="text-lg font-bold text-gray-900">Galeri Panorama 360°</h3>
+                                    </div>
+                                    <div
+                                        class="relative rounded-xl bg-gray-50 border border-gray-200 p-4 overflow-hidden">
+                                        <div class="relative overflow-hidden rounded-lg">
+                                            <div id="panoramaTrack"
+                                                class="flex gap-3 transition-transform duration-300"></div>
+                                        </div>
+                                        <button id="panoramaPrevBtn"
+                                            class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white rounded-full w-9 h-9 flex items-center justify-center shadow-lg transition z-10"
+                                            onclick="scrollPanoramaCarousel(-1)">
+                                            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 19l-7-7 7-7"></path>
+                                            </svg>
+                                        </button>
+                                        <button id="panoramaNextBtn"
+                                            class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white rounded-full w-9 h-9 flex items-center justify-center shadow-lg transition z-10"
+                                            onclick="scrollPanoramaCarousel(1)">
+                                            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 5l7 7-7 7"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <!-- 3D Controls Info -->
-                        <div class="absolute bottom-4 left-4 bg-black/70 text-white text-xs px-3 py-2 rounded-lg z-10">
-                            🖱️ Drag to rotate • 🔍 Scroll to zoom
-                        </div>
-                    </div>
 
-                    <div class="p-8">
-                        <div class="mb-6">
-                            <span id="modalStatus"
-                                class="px-4 py-1 rounded-full text-sm font-semibold inline-block mb-4"></span>
-                            <h2 id="modalName" class="text-3xl font-bold text-gray-900 mb-2"></h2>
-                            <p id="modalPrice" class="text-4xl font-bold text-blue-600"></p>
-                        </div>
+                            <!-- RIGHT: PRODUCT PANEL -->
+                            <div class="product-panel-modal bg-white rounded-2xl overflow-hidden border-2 border-gray-200 shadow-xl"
+                                style="min-height: 400px;">
+                                <!-- HERO IMAGE -->
+                                <div class="relative w-full h-60 bg-gradient-to-br from-gray-50 to-gray-100">
+                                    <img id="modalHeroImage" class="absolute inset-0 w-full h-full object-cover"
+                                        alt="Product">
+                                    <div
+                                        class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent">
+                                    </div>
 
+                                    <!-- STATUS BADGE -->
+                                    <div class="absolute top-4 right-4">
+                                        <span id="modalStatus"
+                                            class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold text-white shadow-xl"></span>
+                                    </div>
+                                </div>
 
+                                <!-- CONTENT AREA -->
+                                <div class="p-6 space-y-5">
+                                    <!-- TITLE & TAGS -->
+                                    <div>
+                                        <h2 id="modalName" class="text-3xl font-black text-gray-900 mb-3 leading-tight">
+                                        </h2>
+                                        <div id="modalTags" class="flex flex-wrap gap-2"></div>
+                                    </div>
 
+                                    <!-- PRICE CARD -->
+                                    <div
+                                        class="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-5 shadow-lg">
+                                        <div
+                                            class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full filter blur-3xl">
+                                        </div>
+                                        <div
+                                            class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full filter blur-2xl">
+                                        </div>
+                                        <div class="relative">
+                                            <p class="text-xs font-semibold text-black uppercase tracking-wide mb-1">
+                                                Harga</p>
+                                            <p id="modalPrice" class="text-3xl font-black text-black tracking-tight">
+                                            </p>
+                                        </div>
+                                    </div>
 
-                        <div class="flex gap-4">
-                            <button onclick="contactDeveloper()"
-                                class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition text-center">
-                                Hubungi Developer
-                            </button>
-                            <button onclick="scheduleVisit()"
-                                class="flex-1 bg-white text-blue-600 py-3 rounded-lg font-semibold hover:bg-gray-50 transition border-2 border-blue-600">
-                                Jadwalkan Kunjungan
-                            </button>
+                                    <!-- DESCRIPTION -->
+                                    <div id="modalDescriptionSection" style="display: none;">
+                                        <div class="flex items-center gap-2 mb-2 mt-2">
+                                            <div
+                                                class="w-1 h-6 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full">
+                                            </div>
+                                            <h3 class="text-lg font-bold text-gray-900">Deskripsi</h3>
+                                        </div>
+                                        <div class="rounded-xl bg-gray-50 border border-gray-200 p-5">
+                                            <div id="modalDescription" class="text-sm leading-relaxed text-gray-700">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- METADATA -->
+                                    <div class="pt-4 border-t-2 border-gray-200">
+                                        <div class="grid grid-cols-2 gap-5" id="modalMetadata"></div>
+                                    </div>
+
+                                    <!-- GALLERY GAMBAR PRODUK -->
+                                    <div id="modalGambarGallery" style="display: none;">
+                                        <div class="flex items-center gap-2 mb-3">
+                                            <div
+                                                class="w-1 h-6 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full">
+                                            </div>
+                                            <h3 class="text-lg font-bold text-gray-900">Galeri Gambar</h3>
+                                        </div>
+                                        <div
+                                            class="relative rounded-xl bg-gray-50 border border-gray-200 p-4 overflow-hidden">
+                                            <div class="relative overflow-hidden rounded-lg">
+                                                <div id="gambarTrack"
+                                                    class="flex gap-3 transition-transform duration-300"></div>
+                                            </div>
+                                            <button id="gambarPrevBtn"
+                                                class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white rounded-full w-9 h-9 flex items-center justify-center shadow-lg transition z-10"
+                                                onclick="scrollGambarCarousel(-1)">
+                                                <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                                </svg>
+                                            </button>
+                                            <button id="gambarNextBtn"
+                                                class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white rounded-full w-9 h-9 flex items-center justify-center shadow-lg transition z-10"
+                                                onclick="scrollGambarCarousel(1)">
+                                                <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- DENAH (Floor Plan) -->
+                                    <div id="modalDenah" style="display: none;">
+                                        <div class="flex items-center gap-2 mb-3">
+                                            <div
+                                                class="w-1 h-6 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full">
+                                            </div>
+                                            <h3 class="text-lg font-bold text-gray-900">Denah Lantai</h3>
+                                        </div>
+                                        <div class="rounded-xl bg-gray-50 border border-gray-200 p-4">
+                                            <div class="relative overflow-hidden rounded-lg">
+                                                <img id="modalDenahImage" src="" alt="Denah"
+                                                    class="w-2xl h-auto cursor-pointer"
+                                                    onclick="window.open(this.src, '_blank')" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ACTION BUTTONS -->
+                                    <div class="flex gap-3 pt-4">
+                                        <button onclick="contactDeveloper()"
+                                            class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg">
+                                            Hubungi Developer
+                                        </button>
+                                        <button onclick="scheduleVisit()"
+                                            class="flex-1 border-2 border-blue-600 text-blue-600 py-3 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-300">
+                                            Jadwalkan Kunjungan
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- 360 Panorama Modal -->
+        <div id="panorama-modal" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[9999]"
+            onclick="closePanoramaModal(event)">
+            <div class="relative w-[90%] h-[90%] max-w-[1400px] bg-gray-900 rounded-2xl shadow-2xl"
+                onclick="event.stopPropagation()" style="z-index: 1000000; overflow: visible;">
+                <button onclick="closePanoramaModal(); event.stopPropagation();"
+                    class="absolute top-5 right-5 bg-white/90 hover:bg-white rounded-full w-12 h-12 flex items-center justify-center transition-all hover:scale-110 shadow-lg"
+                    style="z-index: 1000001 !important;">
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+                <div id="panorama-title"
+                    class="absolute top-5 left-5 bg-black/70 text-white px-5 py-3 rounded-xl text-base font-semibold backdrop-blur-lg"
+                    style="z-index: 1000001 !important;">
+                    Panorama 360°</div>
+                <div id="panorama-viewer" class="w-full h-full rounded-2xl"
+                    style="z-index: 1000000 !important; overflow: hidden;"></div>
+                <div id="panorama-nav"
+                    class="absolute bottom-5 left-1/2 transform -translate-x-1/2 bg-black/90 px-4 py-4 rounded-2xl backdrop-blur-lg max-w-[90%] shadow-2xl border border-white/10 scroll-auto"
+                    style="display: none; z-index: 1000002 !important;">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-white text-sm font-bold uppercase tracking-wider">📸 Pilih Panorama</p>
+                        <span id="panorama-counter" class="text-white/70 text-xs font-medium"></span>
+                    </div>
+                    <div id="panorama-nav-items" class="flex gap-3 overflow-x-auto pb-1"
+                        style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent;"></div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .viewer-container-modal canvas {
+                width: 100% !important;
+                height: 100% !important;
+            }
+
+            /* Custom scrollbar untuk panorama navigation */
+            #panorama-nav-items::-webkit-scrollbar {
+                height: 6px;
+                width: 0;
+                /* Hide vertical scrollbar */
+            }
+
+            #panorama-nav-items::-webkit-scrollbar-track {
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 3px;
+            }
+
+            #panorama-nav-items::-webkit-scrollbar-thumb {
+                background: rgba(255, 255, 255, 0.3);
+                border-radius: 3px;
+            }
+
+            #panorama-nav-items::-webkit-scrollbar-thumb:hover {
+                background: rgba(255, 255, 255, 0.5);
+            }
+
+            /* Hide vertical scrollbar for all browsers */
+            #panorama-nav-items {
+                overflow-y: hidden !important;
+                overflow-x: auto;
+                scrollbar-width: thin;
+                /* Firefox horizontal scrollbar */
+                scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+            }
+
+            #panoramaTrack .carousel-item-modal,
+            #gambarTrack .carousel-item-modal {
+                flex-shrink: 0;
+                width: 160px;
+                height: 120px;
+                border-radius: 8px;
+                overflow: hidden;
+                cursor: pointer;
+                transition: transform 0.2s ease;
+            }
+
+            #panoramaTrack .carousel-item-modal:hover,
+            #gambarTrack .carousel-item-modal:hover {
+                transform: scale(1.05);
+            }
+
+            #panoramaTrack .carousel-item-modal img,
+            #gambarTrack .carousel-item-modal img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+        </style>
 
         <script>
             // Smooth scroll

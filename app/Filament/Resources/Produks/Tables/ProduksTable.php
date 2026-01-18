@@ -7,6 +7,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\TimePicker;
 use Filament\Support\Enums\FontWeight;
@@ -48,7 +49,6 @@ class ProduksTable
                     ->label('Kategori')
                     ->badge()
                     ->color('primary'),
-
                 TextColumn::make('type')
                     ->label('Tipe')
                     ->badge()
@@ -65,7 +65,10 @@ class ProduksTable
 
             ->recordActions([
                 ViewAction::make()->icon('heroicon-o-eye'),
-
+                DeleteAction::make()
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->visible(fn() => Auth::user()?->hasRole('admin')),
                 EditAction::make()
                     ->icon('heroicon-o-pencil')
                     ->visible(fn() => Auth::user()?->hasRole('admin')),

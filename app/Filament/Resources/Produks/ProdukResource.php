@@ -21,7 +21,8 @@ use Filament\Infolists\Components as InfolistComponents;
 class ProdukResource extends Resource
 {
     protected static ?string $model = Produk::class;
-
+    protected static ?string $navigationLabel = 'Products';
+    protected static ?string $pluralModelLabel = 'Products';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $recordTitleAttribute = 'name';

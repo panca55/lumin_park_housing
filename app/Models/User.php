@@ -27,8 +27,17 @@ class User extends Authenticatable implements FilamentUser
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        // Allow all authenticated users to access the dashboard panel
-        return true;
+        // Dashboard panel - all authenticated users
+        if ($panel->getId() === 'dashboard') {
+            return true;
+        }
+
+        // Admin panel only for admin role
+        if ($panel->getId() === 'admin') {
+            return $this->hasRole('admin');
+        }
+
+        return false;
     }
 
     /**

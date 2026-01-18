@@ -18,9 +18,10 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use App\Filament\Resources\ProdukResource;
-use App\Filament\Admin\Pages\Auth\Login;
 use Filament\Navigation\MenuItem;
 use Filament\Navigation\NavigationItem;
+use App\Filament\Pages\Login;
+use App\Filament\Pages\EditProfile;
 
 class FilamentPanelProvider extends PanelProvider
 {
@@ -28,8 +29,8 @@ class FilamentPanelProvider extends PanelProvider
     {
         return $panel
             ->default()
-            ->id('admin')
-            ->path('admin')
+            ->id('dashboard')
+            ->path('dashboard')
             ->login(Login::class)
             ->registration()
             ->colors([
@@ -46,15 +47,19 @@ class FilamentPanelProvider extends PanelProvider
                 Widgets\FilamentInfoWidget::class,
             ])
             ->userMenuItems([
+                'profile' => MenuItem::make()
+                    ->label('Edit Profil')
+                    ->icon('heroicon-o-user-circle')
+                    ->url(fn() => EditProfile::getUrl()),
+
                 'landing' => MenuItem::make()
                     ->label('Landing Page')
                     ->url('/')
-                    ->icon('heroicon-o-home')
-                    ->openUrlInNewTab(),
+                    ->icon('heroicon-o-home'),
             ])
             ->navigationItems([
                 NavigationItem::make('Landing Page')
-                    ->url('/', shouldOpenInNewTab: true)
+                    ->url('/', shouldOpenInNewTab: false)
                     ->icon('heroicon-o-home')
                     ->group('External')
                     ->sort(999),
@@ -63,17 +68,20 @@ class FilamentPanelProvider extends PanelProvider
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
-                AuthenticateSession::class,
+                // AuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+            ->authGuard('web')
             ->authMiddleware([
                 Authenticate::class,
             ])
-            ->brandName('Lumin Park Admin')
+            ->brandName(fn() => auth()->check() && auth()->user()->hasRole('admin')
+                ? 'Lumin Park Admin'
+                : 'Lumin Park Housing')
             ->favicon(asset('favicon.ico'));
     }
 }

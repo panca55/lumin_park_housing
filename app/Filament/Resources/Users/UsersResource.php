@@ -8,19 +8,23 @@ use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Schemas\UsersForm;
 use App\Filament\Resources\Users\Tables\UsersTable;
 use App\Models\User;
-use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use BackedEnum;
 
 class UsersResource extends Resource
 {
     protected static ?string $model = User::class;
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static ?string $navigationLabel = 'Users';
+    protected static ?string $modelLabel = 'User';
+    protected static ?string $pluralModelLabel = 'Users';
+    protected static ?int $navigationSort = 1;
 
-    protected static ?string $recordTitleAttribute = 'User';
+    protected static ?string $recordTitleAttribute = 'name';
 
     public static function canViewAny(): bool
     {

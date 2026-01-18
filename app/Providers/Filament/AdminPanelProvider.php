@@ -10,60 +10,75 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Filament\Widgets;
-
-// use Filament\Pages\Auth\Register;
-use App\Filament\Admin\Pages\Auth\Register;
-
+use Filament\Navigation\MenuItem;
+use App\Filament\Pages\EditProfile;
+use Filament\Navigation\NavigationItem;
+use App\Filament\Pages\Login;
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->default()
-            ->id('dashboard')
-            ->path('dashboard')
-            ->brandName('Lumin Park Admin')
+            ->id('admin')
+            ->path('admin')
+            ->login(Login::class)
             ->colors([
                 'primary' => Color::Blue,
             ])
-            ->login() // Enable Filament Login UI
-            ->registration(Register::class) // Enable Filament Registration UI
-            ->emailVerification(false) // Disable email verification
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
-            // ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
-            ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
-            // ->dashboard(Dashboard::class)
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Dashboard::class,
             ])
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                \App\Filament\Widgets\StatsOverviewWidget::class,
-                \App\Filament\Widgets\RecentPaymentsWidget::class,
-                \App\Filament\Widgets\LandingPageWidget::class,
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
             ])
+            ->userMenuItems([
+                'profile' => MenuItem::make()
+                    ->label('Edit Profil')
+                    ->url(fn(Panel $panel) => EditProfile::getUrl(panel: $panel))
+                    ->icon('heroicon-o-user-circle'),
 
-            ->authMiddleware([
-                Authenticate::class,
+                'landing' => MenuItem::make()
+                    ->label('Landing Page')
+                    ->url('/')
+                    ->icon('heroicon-o-home'),
+            ])
+            ->navigationItems([
+                NavigationItem::make('Landing Page')
+                    ->url('/', shouldOpenInNewTab: false)
+                    ->icon('heroicon-o-home')
+                    ->group('External')
+                    ->sort(999),
             ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
-                AuthenticateSession::class,
+                // AuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-            ]);
+            ])
+            ->authGuard('web')
+            ->authMiddleware([
+                Authenticate::class,
+            ])
+            ->brandName(fn() => auth()->check() && auth()->user()->hasRole('admin')
+                ? 'Lumin Park Admin'
+                : 'Lumin Park Housing')
+            ->favicon(asset('favicon.ico'));
     }
+    
 }

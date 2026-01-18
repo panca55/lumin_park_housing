@@ -10,8 +10,9 @@ class HomeController extends Controller
 {
     public function index()
     {
-        // Get available properties (not sold and not marked as sold)
-        $katalogs = Produk::where('is_available', true)
+        // Get available properties with related images and panoramas
+        $katalogs = Produk::with(['gambarProduks', 'panoramaProduks'])
+            ->where('is_available', true)
             ->orderBy('created_at', 'desc')
             ->get();
 

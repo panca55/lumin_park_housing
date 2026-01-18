@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Produk extends Model
 {
@@ -16,9 +17,20 @@ class Produk extends Model
         'image',
         'model_3d',
         'is_available',
+        'denah',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
     ];
+
+    public function gambarProduks(): HasMany
+    {
+        return $this->hasMany(GambarProduk::class);
+    }
+
+    public function panoramaProduks(): HasMany
+    {
+        return $this->hasMany(PanoramaProduk::class);
+    }
 }
