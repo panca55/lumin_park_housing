@@ -52,6 +52,10 @@
                 color: #9ca3af;
             }
 
+            .dark .viewer-placeholder {
+                color: #6b7280;
+            }
+
             .viewer-placeholder svg {
                 width: 96px;
                 height: 96px;
@@ -72,6 +76,13 @@
                 border: 2px solid #e5e7eb;
                 box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
                 min-height: 400px;
+            }
+
+            /* DARK MODE */
+            .dark .product-panel {
+                background-color: #1f2937;
+                border-color: #374151;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
             }
 
             .hero-section {
@@ -185,6 +196,10 @@
                 margin: 0 0 12px 0;
             }
 
+            .dark .product-title {
+                color: #f9fafb;
+            }
+
             .tags-container {
                 display: flex;
                 flex-wrap: wrap;
@@ -290,11 +305,20 @@
                 margin: 0;
             }
 
+            .dark .section-title {
+                color: #f9fafb;
+            }
+
             .description-box {
                 border-radius: 12px;
                 background-color: #f9fafb;
                 border: 1px solid #e5e7eb;
                 padding: 20px;
+            }
+
+            .dark .description-box {
+                background-color: #111827;
+                border-color: #374151;
             }
 
             .description-content {
@@ -303,13 +327,17 @@
                 color: #374151;
             }
 
-            .description-content p {
-                margin: 0 0 12px 0;
+            .dark .description-content {
+                color: #d1d5db;
             }
 
             .description-content strong {
                 font-weight: 700;
                 color: #111827;
+            }
+
+            .dark .description-content strong {
+                color: #f9fafb;
             }
 
             .metadata-section {
@@ -381,6 +409,10 @@
                 color: #111827;
             }
 
+            .dark .metadata-value {
+                color: #f9fafb;
+            }
+
             /* Gallery Carousel Styles */
             .gallery-section {
                 margin-top: 20px;
@@ -393,6 +425,11 @@
                 border: 1px solid #e5e7eb;
                 padding: 16px;
                 overflow: hidden;
+            }
+
+            .dark .carousel-container {
+                background-color: #111827;
+                border-color: #374151;
             }
 
             .carousel-wrapper {
@@ -445,9 +482,19 @@
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             }
 
+            .dark .carousel-button {
+                background: rgba(31, 41, 55, 0.9);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            }
+
             .carousel-button:hover {
                 background: white;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            .dark .carousel-button:hover {
+                background: #374151;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
             }
 
             .carousel-button:disabled {
@@ -509,6 +556,11 @@
                 box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             }
 
+            .dark .panorama-modal-content {
+                background-color: #0f172a;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            }
+
             .panorama-viewer {
                 width: 100%;
                 height: 100%;
@@ -537,10 +589,18 @@
                 transform: scale(1.1);
             }
 
+            .dark .panorama-close:hover {
+                background: #f1f5f9;
+            }
+
             .panorama-close svg {
                 width: 24px;
                 height: 24px;
                 color: #374151;
+            }
+
+            .dark .panorama-close svg {
+                color: #1f2937;
             }
 
             .panorama-title {
@@ -557,6 +617,11 @@
                 backdrop-filter: blur(10px);
             }
 
+            .dark .panorama-title {
+                background: rgba(15, 23, 42, 0.9);
+                color: #f1f5f9;
+            }
+
             /* Panorama Navigation Panel */
             .panorama-nav {
                 position: absolute;
@@ -571,6 +636,10 @@
                 max-width: 90%;
                 overflow-x: auto;
                 overflow-y: hidden;
+            }
+
+            .dark .panorama-nav {
+                background: rgba(15, 23, 42, 0.9);
             }
 
             .panorama-nav::-webkit-scrollbar {
@@ -600,6 +669,10 @@
                 letter-spacing: 0.05em;
             }
 
+            .dark .panorama-nav-title {
+                color: rgba(241, 245, 249, 0.8);
+            }
+
             .panorama-nav-items {
                 display: flex;
                 gap: 12px;
@@ -620,6 +693,10 @@
             .panorama-nav-item:hover {
                 transform: scale(1.05);
                 border-color: rgba(255, 255, 255, 0.5);
+            }
+
+            .dark .panorama-nav-item:hover {
+                border-color: rgba(241, 245, 249, 0.5);
             }
 
             .panorama-nav-item.active {
@@ -647,6 +724,11 @@
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
+            }
+
+            .dark .panorama-nav-item-title {
+                background: linear-gradient(to top, rgba(15, 23, 42, 0.9), transparent);
+                color: #f1f5f9;
             }
         </style>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
@@ -830,9 +912,9 @@
                     };
 
                     item.innerHTML = `
-                                <img src="${imageUrl}" alt="${panorama.title || 'Panorama'}" loading="lazy">
-                                <div class="panorama-nav-item-title">${panorama.title || `Panorama ${index + 1}`}</div>
-                            `;
+                                    <img src="${imageUrl}" alt="${panorama.title || 'Panorama'}" loading="lazy">
+                                    <div class="panorama-nav-item-title">${panorama.title || `Panorama ${index + 1}`}</div>
+                                `;
 
                     navItems.appendChild(item);
                 });

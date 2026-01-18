@@ -6,14 +6,14 @@
             padding: 2rem;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
-    
+
         /* DARK MODE */
         .dark .login-form-container {
             background: #111827;
             /* gray-900 */
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
         }
-    
+
         .login-title {
             font-size: 1.875rem;
             font-weight: 800;
@@ -21,23 +21,23 @@
             margin-bottom: 0.5rem;
             text-align: center;
         }
-    
+
         .dark .login-title {
             color: #f9fafb;
             /* gray-50 */
         }
-    
+
         .login-subtitle {
             color: #6b7280;
             text-align: center;
             margin-bottom: 2rem;
         }
-    
+
         .dark .login-subtitle {
             color: #9ca3af;
             /* gray-400 */
         }
-    
+
         .back-to-home {
             display: flex;
             justify-content: center;
@@ -51,11 +51,11 @@
             text-decoration: none;
             transition: all 0.3s ease;
         }
-    
+
         .dark .back-to-home {
             background-color: #2563eb;
         }
-        
+
         .submit-button {
             display: inline-flex;
             width: 100%;
@@ -71,15 +71,15 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
-        
+
         .submit-button:hover {
             background-color: #2563eb;
         }
-        
+
         .dark .submit-button {
             background-color: #2563eb;
         }
-        
+
         .dark .submit-button:hover {
             background-color: #1d4ed8;
         }

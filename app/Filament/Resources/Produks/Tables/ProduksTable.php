@@ -24,6 +24,13 @@ class ProduksTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function ($query) {
+                $user = Auth::user();
+                if ($user && $user->hasRole('user')) {
+                    return $query->where('is_available', true);
+                }
+                return $query;
+            })
             ->columns([
                 ImageColumn::make('image')
                     ->label('Gambar')
@@ -53,6 +60,16 @@ class ProduksTable
                     ->label('Tipe')
                     ->badge()
                     ->color('info'),
+
+                TextColumn::make('is_available')
+                    ->label('Tersedia')
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        '1' => 'success',
+                        '0' => 'danger',
+                    })
+                    ->formatStateUsing(fn(string $state): string => $state === '1' ? 'Ya' : 'Tidak')
+                    ->visible(fn() => Auth::user()?->hasRole('admin')),
 
                 TextColumn::make('description')
                     ->label('Deskripsi')
