@@ -739,6 +739,7 @@
             <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
 
             <script>
                 (() => {
@@ -751,7 +752,12 @@
                     renderer.shadowMap.enabled = false;
 
                     const scene = new THREE.Scene();
-                    scene.background = new THREE.Color(0xf1f5f9);
+                    // Set background color based on theme
+                    const updateSceneBackground = () => {
+                        const isDark = document.documentElement.classList.contains('dark');
+                        scene.background = new THREE.Color(isDark ? 0x1f2937 : 0xf1f5f9);
+                    };
+                    updateSceneBackground();
 
                     const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
 
@@ -765,6 +771,12 @@
                     scene.add(light);
 
                     const loader = new THREE.GLTFLoader();
+
+                    // Configure DRACO loader for compressed models
+                    const dracoLoader = new THREE.DRACOLoader();
+                    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+                    loader.setDRACOLoader(dracoLoader);
+
                     loader.load('{{ $model_3d }}', (gltf) => {
                         const model = gltf.scene;
                         scene.add(model);
@@ -777,7 +789,16 @@
                         camera.position.set(0, size * 0.6, size);
                         controls.target.set(0, 0, 0);
 
-                        render();
+                        // Model loaded successfully, animation loop will handle rendering
+                    }, (progress) => {
+                        console.log('Loading progress:', (progress.loaded / progress.total * 100) + '%');
+                    }, (error) => {
+                        console.error('Error loading 3D model:', error);
+                        // Show error in placeholder
+                        const placeholder = canvas.parentElement.querySelector('.viewer-placeholder p');
+                        if (placeholder) {
+                            placeholder.textContent = 'Error loading 3D model';
+                        }
                     });
 
                     function animate() {
@@ -794,6 +815,19 @@
                         camera.aspect = w / h;
                         camera.updateProjectionMatrix();
                         renderer.setSize(w, h);
+                    });
+
+                    // Listen for theme changes
+                    const observer = new MutationObserver((mutations) => {
+                        mutations.forEach((mutation) => {
+                            if (mutation.attributeName === 'class') {
+                                updateSceneBackground();
+                            }
+                        });
+                    });
+                    observer.observe(document.documentElement, {
+                        attributes: true,
+                        attributeFilter: ['class']
                     });
                 })();
             </script>
@@ -912,9 +946,9 @@
                     };
 
                     item.innerHTML = `
-                                    <img src="${imageUrl}" alt="${panorama.title || 'Panorama'}" loading="lazy">
-                                    <div class="panorama-nav-item-title">${panorama.title || `Panorama ${index + 1}`}</div>
-                                `;
+                                        <img src="${imageUrl}" alt="${panorama.title || 'Panorama'}" loading="lazy">
+                                        <div class="panorama-nav-item-title">${panorama.title || `Panorama ${index + 1}`}</div>
+                                    `;
 
                     navItems.appendChild(item);
                 });
