@@ -45,6 +45,10 @@ class FilamentPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
+                // Booking Analytics Widgets (Admin Only)
+                \App\Filament\Widgets\BookingAnalyticsOverview::class,
+                \App\Filament\Widgets\BookingTrendChart::class,
+                \App\Filament\Widgets\MostBookedProductsTable::class,
             ])
             ->userMenuItems([
                 'profile' => MenuItem::make()

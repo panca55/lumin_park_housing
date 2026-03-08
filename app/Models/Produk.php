@@ -118,11 +118,23 @@ class Produk extends Model
     }
 
     /**
-     * Get meeting requests for this product
+     * Get meeting requests that include this product
      */
-    public function meetingRequests(): \Illuminate\Database\Eloquent\Collection
+    public function meetingRequests()
     {
-        return MeetingRequest::where('produk_ids', 'like', '%"' . $this->id . '"%')
+        return MeetingRequest::where(function ($query) {
+            $query->whereJsonContains('produk_ids', $this->id);
+        });
+    }
+
+    /**
+     * Get meeting requests collection for this product
+     */
+    public function getMeetingRequestsCollection(): \Illuminate\Database\Eloquent\Collection
+    {
+        return MeetingRequest::where(function ($query) {
+            $query->whereJsonContains('produk_ids', $this->id);
+        })
             ->with('user')
             ->get();
     }
@@ -204,5 +216,156 @@ class Produk extends Model
                 ->filter()
                 ->sort();
         });
+    }
+
+    // ===========================
+    // MEETING & BOOKING ANALYTICS
+    // ===========================
+
+    /**
+     * Get total booking count for this product
+     */
+    public function getBookingCount(): int
+    {
+        return Cache::remember($this->getCacheKey('booking_count'), 1800, function () {
+            return MeetingRequest::where('status', '!=', 'cancelled')
+                ->where(function ($query) {
+                    $query->whereJsonContains('produk_ids', $this->id);
+                })
+                ->count();
+        });
+    }
+
+    /**
+     * Get pending booking count (not confirmed/completed)
+     */
+    public function getPendingBookingCount(): int
+    {
+        return MeetingRequest::whereIn('status', ['pending', 'confirmed'])
+            ->where(function ($query) {
+                $query->whereJsonContains('produk_ids', $this->id);
+            })
+            ->count();
+    }
+
+    /**
+     * Get booking trend (last 30 days)
+     */
+    public function getBookingTrend(): array
+    {
+        return Cache::remember($this->getCacheKey('booking_trend'), 3600, function () {
+            $bookings = MeetingRequest::where('status', '!=', 'cancelled')
+                ->where('created_at', '>=', now()->subDays(30))
+                ->where(function ($query) {
+                    $query->whereJsonContains('produk_ids', $this->id);
+                })
+                ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get()
+                ->keyBy('date')
+                ->map(fn($item) => $item->count)
+                ->toArray();
+
+            // Fill missing dates with 0
+            $result = [];
+            for ($i = 29; $i >= 0; $i--) {
+                $date = now()->subDays($i)->format('Y-m-d');
+                $result[$date] = $bookings[$date] ?? 0;
+            }
+
+            return $result;
+        });
+    }
+
+    /**
+     * Update booking count cache when new meeting request is created
+     */
+    public function refreshBookingCountCache(): void
+    {
+        Cache::forget($this->getCacheKey('booking_count'));
+        Cache::forget($this->getCacheKey('booking_trend'));
+
+        // Re-cache immediately
+        $this->getBookingCount();
+        $this->getBookingTrend();
+    }
+
+    /**
+     * Get most booked products (static method for analytics)
+     */
+    public static function getMostBookedProducts(int $limit = 10): \Illuminate\Database\Eloquent\Collection
+    {
+        return Cache::remember('products.most_booked', 3600, function () use ($limit) {
+            // Get booking counts for all products
+            $bookingCounts = [];
+
+            static::chunk(50, function ($products) use (&$bookingCounts) {
+                foreach ($products as $product) {
+                    $count = MeetingRequest::where('status', '!=', 'cancelled')
+                        ->where(function ($query) use ($product) {
+                            $query->whereJsonContains('produk_ids', $product->id);
+                        })
+                        ->count();
+
+                    if ($count > 0) {
+                        $bookingCounts[$product->id] = $count;
+                    }
+                }
+            });
+
+            // Sort by booking count and get top products
+            arsort($bookingCounts);
+            $topProductIds = array_slice(array_keys($bookingCounts), 0, $limit, true);
+
+            return static::whereIn('id', $topProductIds)
+                ->get()
+                ->sortBy(function ($product) use ($bookingCounts) {
+                    return - ($bookingCounts[$product->id] ?? 0);
+                });
+        });
+    }
+
+    /**
+     * Get booking analytics summary
+     */
+    public function getBookingAnalytics(): array
+    {
+        $total = $this->getBookingCount();
+        $pending = $this->getPendingBookingCount();
+        $completed = MeetingRequest::where('status', 'completed')
+            ->where(function ($query) {
+                $query->whereJsonContains('produk_ids', $this->id);
+            })
+            ->count();
+
+        $trend = $this->getBookingTrend();
+        $recentBookings = array_slice($trend, -7, 7, true); // Last 7 days
+
+        return [
+            'total_bookings' => $total,
+            'pending_bookings' => $pending,
+            'completed_bookings' => $completed,
+            'recent_trend' => $recentBookings,
+            'average_per_day' => $total > 0 ? round($total / max(1, count(array_filter($trend))), 2) : 0,
+            'popularity_score' => $this->calculatePopularityScore(),
+        ];
+    }
+
+    /**
+     * Calculate popularity score based on various factors
+     */
+    private function calculatePopularityScore(): float
+    {
+        $bookingCount = $this->getBookingCount();
+        $recentBookings = array_sum(array_slice($this->getBookingTrend(), -7, 7));
+        $daysListed = max(1, now()->diffInDays($this->created_at));
+
+        // Weight: 40% total bookings, 40% recent activity, 20% time factor
+        $score = ($bookingCount * 0.4) +
+            ($recentBookings * 0.4) +
+            (min(10, $bookingCount / max(1, $daysListed / 30)) * 0.2);
+
+        return round($score, 2);
     }
 }

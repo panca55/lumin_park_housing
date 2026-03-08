@@ -93,4 +93,42 @@ class MeetingRequest extends Model
     {
         return $query->where('status', $status);
     }
+
+    /**
+     * Boot method untuk handle event
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Refresh cache saat meeting request baru dibuat
+        static::created(function ($meetingRequest) {
+            $meetingRequest->refreshProductBookingCache();
+        });
+
+        // Refresh cache saat meeting request diupdate (status berubah)
+        static::updated(function ($meetingRequest) {
+            $meetingRequest->refreshProductBookingCache();
+        });
+
+        // Refresh cache saat meeting request dihapus
+        static::deleted(function ($meetingRequest) {
+            $meetingRequest->refreshProductBookingCache();
+        });
+    }
+
+    /**
+     * Refresh booking cache untuk produk-produk terkait
+     */
+    private function refreshProductBookingCache(): void
+    {
+        if (!empty($this->produk_ids)) {
+            foreach ($this->produk_ids as $produkId) {
+                $produk = Produk::find($produkId);
+                if ($produk) {
+                    $produk->refreshBookingCountCache();
+                }
+            }
+        }
+    }
 }

@@ -19,6 +19,7 @@ use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Models\MeetingRequest;
+use App\Models\AppSetting;
 
 class ProduksTable
 {
@@ -76,6 +77,34 @@ class ProduksTable
                                 ->badge()
                                 ->color('info')
                                 ->size('sm'),
+
+                            TextColumn::make('booking_stats')
+                                ->label('Booking')
+                                ->badge()
+                                ->color('warning')
+                                ->size('sm')
+                                ->formatStateUsing(function ($record): string {
+                                    $count = $record->getBookingCount();
+                                    $pending = $record->getPendingBookingCount();
+
+                                    if ($count === 0) {
+                                        return 'Belum ada booking';
+                                    }
+
+                                    $text = "{$count}x dibooking";
+                                    if ($pending > 0) {
+                                        $text .= " ({$pending} pending)";
+                                    }
+
+                                    return $text;
+                                })
+                                ->tooltip(function ($record): string {
+                                    $analytics = $record->getBookingAnalytics();
+                                    return "Total: {$analytics['total_bookings']}\n" .
+                                        "Pending: {$analytics['pending_bookings']}\n" .
+                                        "Selesai: {$analytics['completed_bookings']}\n" .
+                                        "Skor Popularitas: {$analytics['popularity_score']}";
+                                }),
                         ])->from('md'),
 
                         TextColumn::make('description')
@@ -161,28 +190,30 @@ class ProduksTable
 
                         $jam = $data['jam_meeting'];
 
-                        $message = "Halo Admin Lumin Park 👋\n\n";
-                        $message .= "Saya ingin mengatur jadwal meeting untuk produk berikut:\n\n";
-                        $message .= "━━━━━━━━━━━━━━━━━━━━━━\n";
-                        $message .= "📋 *DAFTAR PRODUK*\n";
-                        $message .= "━━━━━━━━━━━━━━━━━━━━━━\n";
-                        $message .= $produkList;
-                        $message .= "\n\n";
-                        $message .= "━━━━━━━━━━━━━━━━━━━━━━\n";
-                        $message .= "📅 *JADWAL MEETING*\n";
-                        $message .= "━━━━━━━━━━━━━━━━━━━━━━\n";
-                        $message .= "📆 Tanggal: {$tanggal}\n";
-                        $message .= "🕐 Jam: {$jam}\n\n";
-                        $message .= "━━━━━━━━━━━━━━━━━━━━━━\n";
-                        $message .= "👤 *INFORMASI CUSTOMER*\n";
-                        $message .= "━━━━━━━━━━━━━━━━━━━━━━\n";
-                        $message .= "Nama: {$user->name}\n";
-                        $message .= "Email: {$user->email}\n\n";
-                        $message .= "Mohon konfirmasi ketersediaan jadwal meeting.\n";
-                        $message .= "Terima kasih 🙏";
+                        // Generate message using template from settings
+                        $messageTemplate = AppSetting::get(
+                            'whatsapp_message_template',
+                            "Halo Admin {company_name} 👋\n\nSaya ingin mengatur jadwal meeting untuk produk berikut:\n\n{product_list}\n\n📅 Jadwal Meeting: {meeting_date} pada {meeting_time}\n\n👤 Informasi Customer:\nNama: {customer_name}\nEmail: {customer_email}\n\nMohon konfirmasi ketersediaan jadwal meeting.\nTerima kasih 🙏"
+                        );
+
+                        $message = str_replace([
+                            '{company_name}',
+                            '{product_list}',
+                            '{meeting_date}',
+                            '{meeting_time}',
+                            '{customer_name}',
+                            '{customer_email}'
+                        ], [
+                            AppSetting::getAppName(),
+                            $produkList,
+                            $tanggal,
+                            $jam,
+                            $user->name,
+                            $user->email
+                        ], $messageTemplate);
 
                         // Simpan meeting request untuk tracking dan notifikasi nanti
-                        MeetingRequest::create([
+                        $meetingRequest = MeetingRequest::create([
                             'user_id' => $user->id,
                             'produk_ids' => $produkIds,
                             'tanggal_meeting' => $data['tanggal_meeting'],
@@ -191,7 +222,13 @@ class ProduksTable
                             'whatsapp_message' => $message
                         ]);
 
-                        $adminPhone = '6281234567890'; // GANTI NOMOR
+                        // Auto-refresh booking count cache untuk produk yang terlibat
+                        foreach ($records as $record) {
+                            $record->refreshBookingCountCache();
+                        }
+
+                        // Get admin WhatsApp number from settings
+                        $adminPhone = AppSetting::getAdminWhatsApp();
 
                         return redirect()->away(
                             'https://wa.me/' .
