@@ -18,6 +18,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Models\MeetingRequest;
 
 class ProduksTable
 {
@@ -25,58 +26,82 @@ class ProduksTable
     {
         return $table
             ->modifyQueryUsing(function ($query) {
+                // Eager load relationships untuk mencegah N+1 queries
+                $query->with(['gambarProduks', 'panoramaProduks', 'denahProduks']);
+
+                // Apply role-based filtering
                 $user = Auth::user();
                 if ($user && $user->hasRole('user')) {
                     return $query->where('is_available', true);
                 }
                 return $query;
             })
+            // Grid 3x3 = 9 produk per halaman
+            ->defaultPaginationPageOption(9)
+            ->paginationPageOptions([9, 18, 27, 36])
+            ->deferLoading()
             ->columns([
-                ImageColumn::make('image')
-                    ->label('Gambar')
-                    ->disk('public')
-                    ->size(80)
-                    ->defaultImageUrl(url('/images/placeholder.png')),
+                // Layout khusus untuk grid view 3x3
+                Split::make([
+                    ImageColumn::make('image')
+                        ->label('Gambar')
+                        ->disk('public')
+                        ->size(120) // Ukuran lebih besar untuk grid
+                        ->square()
+                        ->defaultImageUrl(url('/images/placeholder.png')),
 
-                TextColumn::make('name')
-                    ->label('Nama Produk')
-                    ->weight(FontWeight::Bold)
-                    ->searchable()
-                    ->wrap(),
-                TextColumn::make('description')
-                    ->label('Deskripsi')
-                    ->weight(FontWeight::Bold)
-                    ->wrap(),
-                TextColumn::make('price')
-                    ->label('Harga')
-                    ->money('IDR')
-                    ->weight(FontWeight::Bold)
-                    ->color('success'),
-                TextColumn::make('category')
-                    ->label('Kategori')
-                    ->badge()
-                    ->color('primary'),
-                TextColumn::make('type')
-                    ->label('Tipe')
-                    ->badge()
-                    ->color('info'),
+                    Stack::make([
+                        TextColumn::make('name')
+                            ->label('Nama Produk')
+                            ->weight(FontWeight::Bold)
+                            ->searchable()
+                            ->wrap()
+                            ->size('lg'),
 
-                TextColumn::make('is_available')
-                    ->label('Tersedia')
-                    ->badge()
-                    ->color(fn(string $state): string => match ($state) {
-                        '1' => 'success',
-                        '0' => 'danger',
-                    })
-                    ->formatStateUsing(fn(string $state): string => $state === '1' ? 'Ya' : 'Tidak')
-                    ->visible(fn() => Auth::user()?->hasRole('admin')),
+                        TextColumn::make('price')
+                            ->label('Harga')
+                            ->money('IDR')
+                            ->weight(FontWeight::Bold)
+                            ->color('success')
+                            ->size('md'),
 
-                TextColumn::make('description')
-                    ->label('Deskripsi')
-                    ->limit(50)
-                    ->wrap()
-                    ->color('gray')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                        Split::make([
+                            TextColumn::make('category')
+                                ->label('Kategori')
+                                ->badge()
+                                ->color('primary')
+                                ->size('sm'),
+                            TextColumn::make('type')
+                                ->label('Tipe')
+                                ->badge()
+                                ->color('info')
+                                ->size('sm'),
+                        ])->from('md'),
+
+                        TextColumn::make('description')
+                            ->label('Deskripsi')
+                            ->limit(50)
+                            ->wrap()
+                            ->color('gray')
+                            ->size('sm')
+                            ->toggleable(isToggledHiddenByDefault: true),
+
+                        TextColumn::make('is_available')
+                            ->label('Tersedia')
+                            ->badge()
+                            ->color(fn($state): string => match ((string)$state) {
+                                '1' => 'success',
+                                '0' => 'danger',
+                                default => 'gray',
+                            })
+                            ->formatStateUsing(fn($state): string => match ((string)$state) {
+                                '1' => 'Ya',
+                                '0' => 'Tidak',
+                                default => 'Tidak Diketahui'
+                            })
+                            ->visible(fn() => Auth::user()?->hasRole('admin')),
+                    ])->space(2)
+                ])->from('md'),
             ])
             ->defaultSort('created_at', 'desc')
 
@@ -123,6 +148,9 @@ class ProduksTable
 
                         $user = Auth::user();
 
+                        // Simpan meeting request ke database untuk tracking
+                        $produkIds = $records->pluck('id')->toArray();
+
                         $produkList = $records->map(function ($record) {
                             return "• {$record->name} - Rp " .
                                 number_format($record->price, 0, ',', '.');
@@ -152,6 +180,16 @@ class ProduksTable
                         $message .= "Email: {$user->email}\n\n";
                         $message .= "Mohon konfirmasi ketersediaan jadwal meeting.\n";
                         $message .= "Terima kasih 🙏";
+
+                        // Simpan meeting request untuk tracking dan notifikasi nanti
+                        MeetingRequest::create([
+                            'user_id' => $user->id,
+                            'produk_ids' => $produkIds,
+                            'tanggal_meeting' => $data['tanggal_meeting'],
+                            'jam_meeting' => $data['jam_meeting'],
+                            'status' => 'pending',
+                            'whatsapp_message' => $message
+                        ]);
 
                         $adminPhone = '6281234567890'; // GANTI NOMOR
 

@@ -8,4 +8,24 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    build: {
+        rollupOptions: {
+            // Fix compatibility issues 
+            external: ['fsevents'],
+        },
+        // Basic minification
+        minify: true,
+        // Target modern browsers
+        target: 'es2018',
+    },
+    // Simpler dev server
+    server: {
+        hmr: {
+            overlay: false
+        }
+    },
+    // Basic CSS configuration
+    css: {
+        postcss: './postcss.config.js'
+    }
 });

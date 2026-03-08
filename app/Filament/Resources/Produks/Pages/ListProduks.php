@@ -22,15 +22,19 @@ class ListProduks extends ListRecords
         return [];
     }
 
-    // Force table layout (no grid)
+    // Grid 3x3 pagination options
     protected function getTableRecordsPerPageSelectOptions(): array
     {
-        return [10, 25, 50, 100];
+        return [9, 18, 27, 36];
     }
 
-    // Force disable content grid
+    // Enable content grid for better product display
     public function getTableContentGrid(): ?array
     {
-        return null;
+        return [
+            'md' => 2,  // 2 kolom di medium screen
+            'lg' => 3,  // 3 kolom di large screen (optimal untuk desktop)
+            'xl' => 3,  // tetap 3 kolom di xl screen
+        ];
     }
 }
