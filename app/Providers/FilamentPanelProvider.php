@@ -36,20 +36,14 @@ class FilamentPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Blue,
             ])
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+            // Explicit registration untuk performa lebih baik
+            ->resources($this->getResources())
             ->pages([
                 Pages\Dashboard::class,
+                EditProfile::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([
-                Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
-                // Booking Analytics Widgets (Admin Only)
-                \App\Filament\Widgets\BookingAnalyticsOverview::class,
-                \App\Filament\Widgets\BookingTrendChart::class,
-                \App\Filament\Widgets\MostBookedProductsTable::class,
-            ])
+            // Load widgets hanya yang diperlukan
+            ->widgets($this->getWidgets())
             ->userMenuItems([
                 'profile' => MenuItem::make()
                     ->label('Edit Profil')
@@ -72,7 +66,6 @@ class FilamentPanelProvider extends PanelProvider
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
-                // AuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,
@@ -83,9 +76,50 @@ class FilamentPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            ->brandName(fn() => auth()->check() && auth()->user()->hasRole('admin')
-                ? 'Lumin Park Admin'
-                : 'Lumin Park Housing')
+            ->brandName('Lumin Park Housing')  // Static untuk performa
             ->favicon(asset('favicon.ico'));
+    }
+
+    /**
+     * Get resources explicitly to avoid discovery overhead
+     */
+    private function getResources(): array
+    {
+        return [
+            \App\Filament\Resources\Produks\ProdukResource::class,
+            \App\Filament\Resources\AppSettingResource::class,
+            // Add other resources as needed
+        ];
+    }
+
+    /**
+     * Get widgets based on context untuk performa optimal
+     */
+    private function getWidgets(): array
+    {
+        // Base widgets untuk semua user
+        $widgets = [
+            Widgets\AccountWidget::class,
+        ];
+
+        // Widget admin hanya load saat diperlukan via canView()
+        if ($this->shouldLoadAdminWidgets()) {
+            $widgets = array_merge($widgets, [
+                \App\Filament\Widgets\BookingAnalyticsOverview::class,
+                \App\Filament\Widgets\BookingTrendChart::class,
+                \App\Filament\Widgets\MostBookedProductsTable::class,
+            ]);
+        }
+
+        return $widgets;
+    }
+
+    /**
+     * Check if should load admin widgets
+     */
+    private function shouldLoadAdminWidgets(): bool
+    {
+        // Hanya load untuk user yang sudah login sebagai admin
+        return auth()->check() && auth()->user()->hasRole('admin');
     }
 }

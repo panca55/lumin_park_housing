@@ -1,4 +1,5 @@
 <x-filament-panels::page.simple>
+    {{-- Optimized inline CSS untuk custom login --}}
     <style>
         .login-form-container {
             background: white;
@@ -7,10 +8,8 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
 
-        /* DARK MODE */
         .dark .login-form-container {
             background: #111827;
-            /* gray-900 */
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
         }
 
@@ -24,7 +23,6 @@
 
         .dark .login-title {
             color: #f9fafb;
-            /* gray-50 */
         }
 
         .login-subtitle {
@@ -35,7 +33,6 @@
 
         .dark .login-subtitle {
             color: #9ca3af;
-            /* gray-400 */
         }
 
         .back-to-home {

@@ -10,25 +10,14 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use Filament\Support\Icons\Heroicon;
-use BackedEnum;
 use Filament\Schemas\Schema;
 
 class AppSettingResource extends Resource
 {
     protected static ?string $model = AppSetting::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCog6Tooth;
-
-    protected static ?string $navigationLabel = 'Pengaturan Aplikasi';
-
-    protected static ?string $modelLabel = 'Pengaturan';
-
-    protected static ?string $pluralModelLabel = 'Pengaturan Aplikasi';
-
-    protected static ?int $navigationSort = 999;
-
-    // Hanya admin yang bisa akses
+    // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    
     public static function canViewAny(): bool
     {
         return Auth::check() && Auth::user()->hasRole('admin');
