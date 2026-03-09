@@ -1,6 +1,6 @@
 <x-filament-panels::page.simple>
     <link rel="stylesheet" href="{{ asset('build/assets/app-KNcJI-Jw.css') }}">
-    
+
     {{-- Explicit CSS include untuk memastikan Tailwind ter-load --}}
     <style>
         /* Fallback CSS untuk memastikan basic styling */
@@ -11,6 +11,7 @@
             justify-content: center;
             background-color: #f3f4f6;
         }
+
         .fi-simple-page {
             width: 100%;
             max-width: 28rem;

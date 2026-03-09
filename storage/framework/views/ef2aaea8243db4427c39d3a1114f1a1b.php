@@ -9,7 +9,7 @@
 <?php endif; ?>
 <?php $component->withAttributes([]); ?>
     <link rel="stylesheet" href="<?php echo e(asset('build/assets/app-KNcJI-Jw.css')); ?>">
-    
+
     
     <style>
         /* Fallback CSS untuk memastikan basic styling */
@@ -20,6 +20,7 @@
             justify-content: center;
             background-color: #f3f4f6;
         }
+
         .fi-simple-page {
             width: 100%;
             max-width: 28rem;
