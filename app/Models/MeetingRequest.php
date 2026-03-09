@@ -15,14 +15,18 @@ class MeetingRequest extends Model
         'jam_meeting',
         'status',
         'whatsapp_message',
-        'notified_if_sold'
+        'notified_if_sold',
+        'notification_read_at',
+        'sold_product_ids'
     ];
 
     protected $casts = [
         'produk_ids' => 'array',
         'tanggal_meeting' => 'date',
         'jam_meeting' => 'datetime:H:i',
-        'notified_if_sold' => 'boolean'
+        'notified_if_sold' => 'boolean',
+        'notification_read_at' => 'datetime',
+        'sold_product_ids' => 'array'
     ];
 
     /**
@@ -79,6 +83,44 @@ class MeetingRequest extends Model
     }
 
     /**
+     * Mark specific product as sold in this meeting request
+     */
+    public function markProductAsSold(int $produkId): void
+    {
+        // Mark as notified if this request includes the sold product
+        if ($this->includesProduct($produkId)) {
+            $soldProducts = $this->sold_product_ids ?? [];
+
+            if (!in_array($produkId, $soldProducts)) {
+                $soldProducts[] = $produkId;
+            }
+
+            $this->update([
+                'notified_if_sold' => true,
+                'sold_product_ids' => $soldProducts
+            ]);
+        }
+    }
+
+    /**
+     * Mark notification as read
+     */
+    public function markNotificationAsRead(): void
+    {
+        $this->update([
+            'notification_read_at' => now()
+        ]);
+    }
+
+    /**
+     * Check if notification has been read
+     */
+    public function isNotificationRead(): bool
+    {
+        return $this->notification_read_at !== null;
+    }
+
+    /**
      * Scope untuk meeting requests yang belum dinotifikasi
      */
     public function scopeNotNotified($query)
@@ -92,6 +134,49 @@ class MeetingRequest extends Model
     public function scopeByStatus($query, string $status)
     {
         return $query->where('status', $status);
+    }
+
+    /**
+     * Get sold product notifications for a user
+     */
+    public static function getSoldProductNotifications(int $userId): \Illuminate\Database\Eloquent\Collection
+    {
+        return static::with(['user'])
+            ->where('user_id', $userId)
+            ->where('notified_if_sold', true)
+            ->where('status', '!=', 'cancelled')
+            ->whereNull('notification_read_at') // Hanya yang belum dibaca
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->filter(function ($meetingRequest) {
+                // Filter hanya yang produknya benar-benar sudah terjual
+                $soldProductIds = $meetingRequest->sold_product_ids ?? [];
+                if (empty($soldProductIds)) {
+                    return false;
+                }
+
+                $soldProducts = Produk::whereIn('id', $soldProductIds)
+                    ->where('is_sold', true)
+                    ->count();
+
+                return $soldProducts > 0;
+            });
+    }
+
+    /**
+     * Get products that are sold from this meeting request
+     */
+    public function getSoldProducts(): \Illuminate\Database\Eloquent\Collection
+    {
+        $soldProductIds = $this->sold_product_ids ?? [];
+
+        if (empty($soldProductIds)) {
+            return collect([]);
+        }
+
+        return Produk::whereIn('id', $soldProductIds)
+            ->where('is_sold', true)
+            ->get();
     }
 
     /**

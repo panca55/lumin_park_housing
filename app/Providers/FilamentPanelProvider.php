@@ -17,11 +17,13 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Illuminate\Support\Facades\Auth;
 use App\Filament\Resources\ProdukResource;
 use Filament\Navigation\MenuItem;
 use Filament\Navigation\NavigationItem;
 use App\Filament\Pages\Login;
 use App\Filament\Pages\EditProfile;
+use App\Filament\Pages\Dashboard;
 
 class FilamentPanelProvider extends PanelProvider
 {
@@ -39,11 +41,10 @@ class FilamentPanelProvider extends PanelProvider
             // Explicit registration untuk performa lebih baik
             ->resources($this->getResources())
             ->pages([
-                Pages\Dashboard::class,
+                Dashboard::class,
                 EditProfile::class,
             ])
-            // Load widgets hanya yang diperlukan
-            ->widgets($this->getWidgets())
+            -> discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->userMenuItems([
                 'profile' => MenuItem::make()
                     ->label('Edit Profil')
@@ -88,40 +89,10 @@ class FilamentPanelProvider extends PanelProvider
     private function getResources(): array
     {
         return [
+            \App\Filament\Resources\Users\UsersResource::class,
             \App\Filament\Resources\Produks\ProdukResource::class,
             \App\Filament\Resources\AppSettingResource::class,
             // Add other resources as needed
         ];
-    }
-
-    /**
-     * Get widgets based on context untuk performa optimal
-     */
-    private function getWidgets(): array
-    {
-        // Base widgets untuk semua user
-        $widgets = [
-            Widgets\AccountWidget::class,
-        ];
-
-        // Widget admin hanya load saat diperlukan via canView()
-        if ($this->shouldLoadAdminWidgets()) {
-            $widgets = array_merge($widgets, [
-                \App\Filament\Widgets\BookingAnalyticsOverview::class,
-                \App\Filament\Widgets\BookingTrendChart::class,
-                \App\Filament\Widgets\MostBookedProductsTable::class,
-            ]);
-        }
-
-        return $widgets;
-    }
-
-    /**
-     * Check if should load admin widgets
-     */
-    private function shouldLoadAdminWidgets(): bool
-    {
-        // Hanya load untuk user yang sudah login sebagai admin
-        return auth()->check() && auth()->user()->hasRole('admin');
     }
 }

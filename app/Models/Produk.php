@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Builder;
-use App\Notifications\ProductSoldNotification;
-use Illuminate\Support\Facades\Notification;
 use App\Models\MeetingRequest;
 
 class Produk extends Model
@@ -22,11 +20,13 @@ class Produk extends Model
         'image',
         'model_3d',
         'is_available',
+        'is_sold',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'is_available' => 'boolean',
+        'is_sold' => 'boolean',
     ];
 
     // Eager load common relationships by default
@@ -140,22 +140,17 @@ class Produk extends Model
     }
 
     /**
-     * Notify customers when product is sold
+     * Update meeting requests status when product is sold
      */
-    public function notifyCustomersIfSold(): void
+    public function updateMeetingRequestsIfSold(): void
     {
-        // Hanya kirim notifikasi jika produk tidak tersedia (terjual)
+        // Update status meeting requests jika produk tidak tersedia (terjual)
         if (!$this->is_available) {
             $meetingRequests = MeetingRequest::getCustomersForProducts([$this->id]);
 
             foreach ($meetingRequests as $meetingRequest) {
-                // Kirim notification ke customer
-                $meetingRequest->user->notify(
-                    new ProductSoldNotification($this, $meetingRequest)
-                );
-
-                // Mark sebagai sudah dinotifikasi
-                $meetingRequest->markAsNotified();
+                // Update status meeting request dan mark as notified
+                $meetingRequest->markProductAsSold($this->id);
             }
         }
     }
@@ -165,6 +160,13 @@ class Produk extends Model
      */
     protected static function booted(): void
     {
+        // Auto set is_available = false when is_sold = true
+        static::saving(function ($produk) {
+            if ($produk->is_sold && $produk->is_available) {
+                $produk->is_available = false;
+            }
+        });
+
         static::saved(function ($produk) {
             // Clear caches
             Cache::forget($produk->getCacheKey());
@@ -172,9 +174,9 @@ class Produk extends Model
             Cache::forget('produk.categories');
             Cache::forget('produk.types');
 
-            // Check if product was marked as sold and notify customers
-            if ($produk->wasChanged('is_available')) {
-                $produk->notifyCustomersIfSold();
+            // Check if product was marked as sold and update meeting requests
+            if ($produk->wasChanged('is_available') || $produk->wasChanged('is_sold')) {
+                $produk->updateMeetingRequestsIfSold();
             }
         });
 
@@ -185,8 +187,8 @@ class Produk extends Model
             Cache::forget('produk.categories');
             Cache::forget('produk.types');
 
-            // Notify customers that product is no longer available
-            $produk->notifyCustomersIfSold();
+            // Update meeting requests when product is deleted
+            $produk->updateMeetingRequestsIfSold();
         });
     }
 

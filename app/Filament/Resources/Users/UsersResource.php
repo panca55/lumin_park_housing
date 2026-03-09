@@ -12,12 +12,13 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use BackedEnum;
 
 class UsersResource extends Resource
 {
     protected static ?string $model = User::class;
-    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-users';
 
     protected static ?string $navigationLabel = 'Users';
     protected static ?string $modelLabel = 'User';
@@ -28,7 +29,7 @@ class UsersResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasRole('admin') ?? false;
+        return Auth::check() && Auth::user()->hasRole('admin');
     }
 
     public static function form(Schema $schema): Schema

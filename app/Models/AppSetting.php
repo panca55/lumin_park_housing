@@ -27,7 +27,8 @@ class AppSetting extends Model
      */
     public static function get(string $key, $default = null)
     {
-        return Cache::remember("app_setting.{$key}", 3600, function () use ($key, $default) {
+        // Cache for 5 minutes (300 seconds) instead of 1 hour
+        return Cache::remember("app_setting.{$key}", 300, function () use ($key, $default) {
             $setting = static::where('key', $key)->first();
             return $setting ? $setting->value : $default;
         });
@@ -95,7 +96,8 @@ class AppSetting extends Model
      */
     public static function getPublicSettings(): array
     {
-        return Cache::remember('public_settings', 3600, function () {
+        // Cache for 5 minutes (300 seconds) instead of 1 hour
+        return Cache::remember('public_settings', 300, function () {
             return static::where('is_public', true)
                 ->pluck('value', 'key')
                 ->toArray();
@@ -121,11 +123,15 @@ class AppSetting extends Model
     {
         parent::boot();
 
-        static::saved(function () {
+        // Clear cache when a setting is saved (created or updated)
+        static::saved(function ($setting) {
+            Cache::forget("app_setting.{$setting->key}");
             Cache::forget('public_settings');
         });
 
-        static::deleted(function () {
+        // Clear cache when a setting is deleted
+        static::deleted(function ($setting) {
+            Cache::forget("app_setting.{$setting->key}");
             Cache::forget('public_settings');
         });
     }

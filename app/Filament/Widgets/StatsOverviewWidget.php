@@ -9,6 +9,10 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class StatsOverviewWidget extends BaseStatsOverviewWidget
 {
+    public static function canView(): bool
+    {
+        return auth()->check() && auth()->user()->hasRole('admin');
+    }
     protected function getStats(): array
     {
         $totalProducts = Produk::count();

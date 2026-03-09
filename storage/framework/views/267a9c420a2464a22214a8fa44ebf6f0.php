@@ -4,7 +4,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Lumin Park Housing - Rumah Impian Anda</title>
+        <title><?php echo e($appName ?? 'Lumin Park Housing'); ?> - Rumah Impian Anda</title>
         <?php
             use Illuminate\Support\Facades\Storage;
             use Illuminate\Support\Str;
@@ -439,7 +439,7 @@
                     property.gambar_produks.forEach(img => {
                         const imgDiv = document.createElement('div');
                         imgDiv.className = 'carousel-item-modal';
-                        imgDiv.innerHTML = `<img src="${img}" alt="Gambar Produk" class="w-full h-full object-cover">`;
+                        imgDiv.innerHTML = `<img src="${img}" alt="Gambar Produk" class="w-full h-full object-cover" loading="lazy">`;
                         imgDiv.onclick = () => window.open(img, '_blank');
                         gambarTrack.appendChild(imgDiv);
                     });
@@ -459,7 +459,7 @@
                     property.panorama_produks.forEach((item, index) => {
                         const imgDiv = document.createElement('div');
                         imgDiv.className = 'carousel-item-modal';
-                        imgDiv.innerHTML = `<img src="${item.image}" alt="${item.title || 'Panorama'}" class="w-full h-full object-cover">`;
+                        imgDiv.innerHTML = `<img src="${item.image}" alt="${item.title || 'Panorama'}" class="w-full h-full object-cover" loading="lazy">`;
                         imgDiv.onclick = () => openPanoramaModal(index);
                         panoramaTrack.appendChild(imgDiv);
                     });
@@ -479,7 +479,7 @@
                     property.denah_produks.forEach(denah => {
                         const imgDiv = document.createElement('div');
                         imgDiv.className = 'carousel-item-modal';
-                        imgDiv.innerHTML = `<img src="${denah.image}" alt="${denah.title}" class="w-full h-full object-cover">`;
+                        imgDiv.innerHTML = `<img src="${denah.image}" alt="${denah.title}" class="w-full h-full object-cover" loading="lazy">`;
                         imgDiv.onclick = () => window.open(denah.image, '_blank');
                         denahTrack.appendChild(imgDiv);
                     });
@@ -865,7 +865,8 @@
                     `Mohon informasi jadwal kunjungan yang tersedia.\n` +
                     `Terima kasih 🙏`;
 
-                window.open(`https://wa.me/6285664954621?text=${encodeURIComponent(message)}`, '_blank');
+                const adminWhatsApp = '<?php echo e($adminWhatsApp ?? "6281234567890"); ?>';
+                window.open(`https://wa.me/${adminWhatsApp}?text=${encodeURIComponent(message)}`, '_blank');
             }
 
             function contactDeveloper() {
@@ -883,7 +884,8 @@
                 const userName = '<?php echo e(Auth::check() ? Auth::user()->name : ""); ?>';
                 const userEmail = '<?php echo e(Auth::check() ? Auth::user()->email : ""); ?>';
 
-                const message = `Halo Admin Lumin Park 👋\n\n` +
+                const appName = '<?php echo e($appName ?? "Lumin Park Housing"); ?>';
+                const message = `Halo Admin ${appName} 👋\n\n` +
                     `Saya ingin mendapatkan informasi lebih lanjut\n\n` +
                     `━━━━━━━━━━━━━━━━━━━━━━\n` +
                     `🏠 *PROPERTI*\n` +
@@ -897,7 +899,8 @@
                     `Mohon informasi detail dan harga terbaik.\n` +
                     `Terima kasih 🙏`;
 
-                window.open(`https://wa.me/6285664954621?text=${encodeURIComponent(message)}`, '_blank');
+                const adminWhatsApp = '<?php echo e($adminWhatsApp ?? "6281234567890"); ?>';
+                window.open(`https://wa.me/${adminWhatsApp}?text=${encodeURIComponent(message)}`, '_blank');
             }
 
             // Make functions global so they can be called from HTML
@@ -925,7 +928,8 @@
                     <div class="flex items-center">
                         <h1
                             class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                            Lumin Park Housing
+                            <?php echo e($appName ?? 'Lumin Park Housing'); ?>
+
                         </h1>
                     </div>
                     <div class="hidden md:flex items-center space-x-8">
@@ -993,7 +997,7 @@
                     </div>
                     <div class="relative">
                         <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800" alt="Modern House"
-                            class="rounded-2xl shadow-2xl">
+                            class="rounded-2xl shadow-2xl" loading="lazy">
                         <div class="absolute -bottom-6 -left-6 bg-white p-6 rounded-xl shadow-xl">
                             <div class="flex items-center space-x-4">
                                 <div class="bg-blue-100 p-3 rounded-lg">
@@ -1168,7 +1172,7 @@
 
                             <div class="relative h-64 overflow-hidden">
                                 <img src="<?php echo e($property['image']); ?>" alt="<?php echo e($katalog->name); ?>"
-                                    class="property-image w-full h-full object-cover" />
+                                    class="property-image w-full h-full object-cover" loading="lazy" />
 
                                 <!-- Gradient Overlay -->
                                 <div class="overlay-gradient absolute inset-0"></div>
@@ -1252,6 +1256,68 @@
                         </div>
                     <?php endif; ?>
                 </div>
+
+                <!-- Pagination -->
+                <?php if($katalogs->hasPages()): ?>
+                    <div class="mt-12 flex justify-center">
+                        <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination Navigation">
+                            
+                            <?php if($katalogs->onFirstPage()): ?>
+                                <span
+                                    class="px-4 py-2 text-sm font-medium text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 19l-7-7 7-7"></path>
+                                    </svg>
+                                </span>
+                            <?php else: ?>
+                                <a href="<?php echo e($katalogs->previousPageUrl()); ?>"
+                                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gradient-to-r hover:from-purple-600 hover:to-blue-600 hover:text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-xl transform hover:scale-105">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 19l-7-7 7-7"></path>
+                                    </svg>
+                                </a>
+                            <?php endif; ?>
+
+                            
+                            <?php $__currentLoopData = $katalogs->links()->elements[0]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $page => $url): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php if($page == $katalogs->currentPage()): ?>
+                                    <span
+                                        class="px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg shadow-xl">
+                                        <?php echo e($page); ?>
+
+                                    </span>
+                                <?php else: ?>
+                                    <a href="<?php echo e($url); ?>"
+                                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gradient-to-r hover:from-purple-600 hover:to-blue-600 hover:text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-xl transform hover:scale-105">
+                                        <?php echo e($page); ?>
+
+                                    </a>
+                                <?php endif; ?>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+
+                            
+                            <?php if($katalogs->hasMorePages()): ?>
+                                <a href="<?php echo e($katalogs->nextPageUrl()); ?>"
+                                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gradient-to-r hover:from-purple-600 hover:to-blue-600 hover:text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-xl transform hover:scale-105">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                                        </path>
+                                    </svg>
+                                </a>
+                            <?php else: ?>
+                                <span
+                                    class="px-4 py-2 text-sm font-medium text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                                        </path>
+                                    </svg>
+                                </span>
+                            <?php endif; ?>
+                        </nav>
+                    </div>
+                <?php endif; ?>
             </div>
         </section>
 
@@ -1261,7 +1327,9 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="grid md:grid-cols-2 gap-12 items-center">
                     <div>
-                        <h2 class="text-4xl font-bold text-gray-900 mb-6">Tentang Lumin Park Housing</h2>
+                        <h2 class="text-4xl font-bold text-gray-900 mb-6">Tentang <?php echo e($appName ?? 'Lumin Park Housing'); ?>
+
+                        </h2>
                         <p class="text-lg text-gray-600 mb-4">
                             Kami adalah pengembang properti terpercaya dengan pengalaman lebih dari 15 tahun dalam
                             menciptakan hunian berkualitas tinggi.
@@ -1284,7 +1352,7 @@
                     </div>
                     <div>
                         <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800" alt="About Us"
-                            class="rounded-2xl shadow-2xl">
+                            class="rounded-2xl shadow-2xl" loading="lazy">
                     </div>
                 </div>
             </div>
@@ -1299,7 +1367,7 @@
                 <p class="text-xl mb-8 opacity-90">Hubungi kami untuk konsultasi gratis dan dapatkan penawaran terbaik
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="https://wa.me/6281234567890"
+                    <a href="https://wa.me/<?php echo e($adminWhatsApp ?? '6281234567890'); ?>"
                         class="bg-green-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-600 transition shadow-lg">
                         💬 WhatsApp
                     </a>
@@ -1318,7 +1386,9 @@
                     <div>
                         <h3
                             class="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-                            Lumin Park Housing</h3>
+                            <?php echo e($appName ?? 'Lumin Park Housing'); ?>
+
+                        </h3>
                         <p class="text-gray-400">Hunian modern untuk keluarga masa depan</p>
                     </div>
                     <div>
@@ -1334,8 +1404,8 @@
                         <h4 class="font-bold mb-4">Kontak</h4>
                         <ul class="space-y-2 text-gray-400">
                             <li>Email: info@luminpark.com</li>
-                            <li>Phone: +62 812-3456-7890</li>
-                            <li>WhatsApp: +62 812-3456-7890</li>
+                            <li>Phone: +<?php echo e($adminWhatsApp ?? '6281234567890'); ?></li>
+                            <li>WhatsApp: +<?php echo e($adminWhatsApp ?? '6281234567890'); ?></li>
                         </ul>
                     </div>
                     <div>
@@ -1344,7 +1414,7 @@
                     </div>
                 </div>
                 <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-                    <p>&copy; 2024 Lumin Park Housing. All rights reserved.</p>
+                    <p>&copy; <?php echo e(date('Y')); ?> <?php echo e($appName ?? 'Lumin Park Housing'); ?>. All rights reserved.</p>
                 </div>
             </div>
         </footer>
@@ -1434,7 +1504,7 @@
                                 <!-- HERO IMAGE -->
                                 <div class="relative w-full h-60 bg-gradient-to-br from-gray-50 to-gray-100">
                                     <img id="modalHeroImage" class="absolute inset-0 w-full h-full object-cover"
-                                        alt="Product">
+                                        alt="Product" loading="lazy">
                                     <div
                                         class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent">
                                     </div>
