@@ -37,100 +37,108 @@ class ProduksTable
                 }
                 return $query;
             })
-            // Grid 3x3 = 9 produk per halaman
-            ->defaultPaginationPageOption(9)
-            ->paginationPageOptions([9, 18, 27, 36])
+            // Responsive pagination: fewer items on mobile, more on desktop
+            ->defaultPaginationPageOption(6)
+            ->paginationPageOptions([6, 9, 12, 18])
             ->deferLoading()
             ->columns([
-                // Layout khusus untuk grid view 3x3
-                Split::make([
+                // Layout responsif untuk grid view 3x3
+                Stack::make([
                     ImageColumn::make('image')
                         ->label('Gambar')
                         ->disk('public')
-                        ->size(120) // Ukuran lebih besar untuk grid
+                        ->size(80) // Base size for mobile
                         ->square()
+                        ->alignment('center')
                         ->defaultImageUrl(url('/images/placeholder.png')),
 
-                    Stack::make([
-                        TextColumn::make('name')
-                            ->label('Nama Produk')
-                            ->weight(FontWeight::Bold)
-                            ->searchable()
-                            ->wrap()
-                            ->size('lg'),
+                    TextColumn::make('name')
+                        ->label('Nama Produk')
+                        ->weight(FontWeight::Bold)
+                        ->searchable()
+                        ->wrap()
+                        ->size('md') // Smaller on mobile
+                        ->alignment('center'),
 
-                        TextColumn::make('price')
-                            ->label('Harga')
-                            ->money('IDR')
-                            ->weight(FontWeight::Bold)
-                            ->color('success')
-                            ->size('md'),
+                    TextColumn::make('price')
+                        ->label('Harga')
+                        ->money('IDR')
+                        ->weight(FontWeight::Bold)
+                        ->color('success')
+                        ->size('sm')
+                        ->alignment('center'),
 
-                        Split::make([
-                            TextColumn::make('category')
-                                ->label('Kategori')
-                                ->badge()
-                                ->color('primary')
-                                ->size('sm'),
-                            TextColumn::make('type')
-                                ->label('Tipe')
-                                ->badge()
-                                ->color('info')
-                                ->size('sm'),
-
-                            TextColumn::make('booking_stats')
-                                ->label('Booking')
-                                ->badge()
-                                ->color('warning')
-                                ->size('sm')
-                                ->formatStateUsing(function ($record): string {
-                                    $count = $record->getBookingCount();
-                                    $pending = $record->getPendingBookingCount();
-
-                                    if ($count === 0) {
-                                        return 'Belum ada booking';
-                                    }
-
-                                    $text = "{$count}x dibooking";
-                                    if ($pending > 0) {
-                                        $text .= " ({$pending} pending)";
-                                    }
-
-                                    return $text;
-                                })
-                                ->tooltip(function ($record): string {
-                                    $analytics = $record->getBookingAnalytics();
-                                    return "Total: {$analytics['total_bookings']}\n" .
-                                        "Pending: {$analytics['pending_bookings']}\n" .
-                                        "Selesai: {$analytics['completed_bookings']}\n" .
-                                        "Skor Popularitas: {$analytics['popularity_score']}";
-                                }),
-                        ])->from('md'),
-
-                        TextColumn::make('description')
-                            ->label('Deskripsi')
-                            ->limit(50)
-                            ->wrap()
-                            ->color('gray')
-                            ->size('sm')
-                            ->toggleable(isToggledHiddenByDefault: true),
-
-                        TextColumn::make('is_available')
-                            ->label('Tersedia')
+                    // Mobile-first responsive layout for category and type
+                    Split::make([
+                        TextColumn::make('category')
+                            ->label('Kategori')
                             ->badge()
-                            ->color(fn($state): string => match ((string)$state) {
-                                '1' => 'success',
-                                '0' => 'danger',
-                                default => 'gray',
-                            })
-                            ->formatStateUsing(fn($state): string => match ((string)$state) {
-                                '1' => 'Ya',
-                                '0' => 'Tidak',
-                                default => 'Tidak Diketahui'
-                            })
-                            ->visible(fn() => Auth::user()?->hasRole('admin')),
-                    ])->space(2)
-                ])->from('md'),
+                            ->color('primary')
+                            ->size('xs'),
+                        TextColumn::make('type')
+                            ->label('Tipe')
+                            ->badge()
+                            ->color('info')
+                            ->size('xs'),
+                    ])->from('sm'), // Stack on mobile, side by side on small screens and up
+
+                    TextColumn::make('booking_stats')
+                        ->label('Booking')
+                        ->badge()
+                        ->color('warning')
+                        ->size('xs')
+                        ->alignment('center')
+                        ->formatStateUsing(function ($record): string {
+                            $count = $record->getBookingCount();
+                            $pending = $record->getPendingBookingCount();
+
+                            if ($count === 0) {
+                                return 'Belum ada';
+                            }
+
+                            $text = "{$count}x";
+                            if ($pending > 0) {
+                                $text .= " ({$pending})";
+                            }
+
+                            return $text;
+                        })
+
+
+                        ->tooltip(function ($record): string {
+                            $analytics = $record->getBookingAnalytics();
+                            return "Total: {$analytics['total_bookings']}\n" .
+                                "Pending: {$analytics['pending_bookings']}\n" .
+                                "Selesai: {$analytics['completed_bookings']}\n" .
+                                "Skor Popularitas: {$analytics['popularity_score']}";
+                        }),
+
+                    TextColumn::make('description')
+                        ->label('Deskripsi')
+                        ->limit(30) // Shorter on mobile
+                        ->wrap()
+                        ->color('gray')
+                        ->size('xs')
+                        ->alignment('center')
+                        ->toggleable(isToggledHiddenByDefault: true),
+
+                    TextColumn::make('is_available')
+                        ->label('Status')
+                        ->badge()
+                        ->size('xs')
+                        ->alignment('center')
+                        ->color(fn($state): string => match ((string)$state) {
+                            '1' => 'success',
+                            '0' => 'danger', 
+                            default => 'gray',
+                        })
+                        ->formatStateUsing(fn($state): string => match ((string)$state) {
+                            '1' => 'Tersedia',
+                            '0' => 'Terjual',
+                            default => '?'
+                        })
+                        ->visible(fn() => Auth::user()?->hasRole('admin')),
+                ])->space(1)->alignment('center'),
             ])
             ->defaultSort('created_at', 'desc')
 
