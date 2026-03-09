@@ -1,7 +1,16 @@
-<x-filament-panels::page.simple>
-    <link rel="stylesheet" href="{{ asset('build/assets/app-KNcJI-Jw.css') }}">
+<?php if (isset($component)) { $__componentOriginalf45da69382bf4ac45a50b496dc82aa9a = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalf45da69382bf4ac45a50b496dc82aa9a = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament-panels::components.page.simple','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('filament-panels::page.simple'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+    <link rel="stylesheet" href="<?php echo e(asset('build/assets/app-KNcJI-Jw.css')); ?>">
     
-    {{-- Explicit CSS include untuk memastikan Tailwind ter-load --}}
+    
     <style>
         /* Fallback CSS untuk memastikan basic styling */
         .fi-simple-main {
@@ -21,7 +30,7 @@
         }
     </style>
 
-    {{-- Optimized inline CSS untuk custom login --}}
+    
     <style>
         .login-form-container {
             background: white;
@@ -110,7 +119,8 @@
         <p class="login-subtitle">Silakan masuk ke akun Anda</p>
 
         <form wire:submit.prevent="authenticate">
-            {{ $this->form }}
+            <?php echo e($this->form); ?>
+
 
             <button type="submit" class="submit-button">
                 Masuk
@@ -119,9 +129,18 @@
     </div>
 
     <div class="mt-6 text-center">
-        <a href="{{ url('/') }}" class="back-to-home">
+        <a href="<?php echo e(url('/')); ?>" class="back-to-home">
             <span class="arrow-left">→</span>
             Kembali ke Landing Page
         </a>
     </div>
-</x-filament-panels::page.simple>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalf45da69382bf4ac45a50b496dc82aa9a)): ?>
+<?php $attributes = $__attributesOriginalf45da69382bf4ac45a50b496dc82aa9a; ?>
+<?php unset($__attributesOriginalf45da69382bf4ac45a50b496dc82aa9a); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalf45da69382bf4ac45a50b496dc82aa9a)): ?>
+<?php $component = $__componentOriginalf45da69382bf4ac45a50b496dc82aa9a; ?>
+<?php unset($__componentOriginalf45da69382bf4ac45a50b496dc82aa9a); ?>
+<?php endif; ?><?php /**PATH C:\laragon\www\lumin_park_housing\resources\views/filament/admin/pages/auth/login.blade.php ENDPATH**/ ?>

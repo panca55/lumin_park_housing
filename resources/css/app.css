@@ -1,6 +1,19 @@
 @import "tailwindcss";
 
-/* Custom utility classes for the project */
+/* Force important Tailwind utilities for Filament compatibility */
+@layer utilities {
+    .mt-6 { margin-top: 1.5rem !important; }
+    .text-center { text-align: center !important; }
+    .rounded-lg { border-radius: 0.5rem !important; }
+    .shadow-lg { 
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+    }
+    .bg-white { background-color: #fff !important; }
+    .text-gray-500 { color: #6b7280 !important; }
+    .text-gray-700 { color: #374151 !important; }
+}
+
+/* Additional utilities for fallback */
 .bg-gray-50 { background-color: #f9fafb; }
 .bg-white { background-color: #ffffff; }
 .bg-zinc-900 { background-color: #18181b; }

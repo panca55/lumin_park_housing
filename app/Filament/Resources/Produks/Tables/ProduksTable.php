@@ -131,7 +131,7 @@ class ProduksTable
                         ->alignment('center')
                         ->color(fn($state): string => match ((string)$state) {
                             '1' => 'success',
-                            '0' => 'danger', 
+                            '0' => 'danger',
                             default => 'gray',
                         })
                         ->formatStateUsing(fn($state): string => match ((string)$state) {

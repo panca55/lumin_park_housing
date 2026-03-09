@@ -78,7 +78,8 @@ class FilamentPanelProvider extends PanelProvider
             ])
             ->brandName('Lumin Park Housing')  // Static untuk performa
             ->favicon(asset('favicon.ico'))
-            ->viteTheme('resources/css/app.css'); // Load custom CSS with responsive improvements
+            ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
+            ->spa();
     }
 
     /**
