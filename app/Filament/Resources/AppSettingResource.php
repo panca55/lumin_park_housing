@@ -8,6 +8,11 @@ use App\Models\AppSetting;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Filament\Schemas\Schema;
@@ -17,7 +22,7 @@ class AppSettingResource extends Resource
     protected static ?string $model = AppSetting::class;
 
     // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    
+
     public static function canViewAny(): bool
     {
         return Auth::check() && Auth::user()->hasRole('admin');
@@ -93,8 +98,8 @@ class AppSettingResource extends Resource
                     ->boolean(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make()
+                EditAction::make(),
+                DeleteAction::make()
                     ->visible(
                         fn(?AppSetting $record) =>
                         !in_array($record?->key, [
@@ -106,9 +111,9 @@ class AppSettingResource extends Resource
                     ), // Tidak bisa hapus setting penting
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\BulkAction::make('clear_cache')
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                    BulkAction::make('clear_cache')
                         ->label('Clear Cache')
                         ->icon('heroicon-o-arrow-path')
                         ->color('warning')
