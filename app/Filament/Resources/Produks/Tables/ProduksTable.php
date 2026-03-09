@@ -41,6 +41,8 @@ class ProduksTable
             ->defaultPaginationPageOption(6)
             ->paginationPageOptions([6, 9, 12, 18])
             ->deferLoading()
+            ->extremePaginationLinks() // Better mobile pagination
+            ->poll('30s') // Auto refresh for real-time updates
             ->columns([
                 // Layout responsif untuk grid view 3x3
                 Stack::make([
@@ -141,6 +143,12 @@ class ProduksTable
                 ])->space(1)->alignment('center'),
             ])
             ->defaultSort('created_at', 'desc')
+            ->striped() // Better visual separation on mobile
+            ->contentGrid([
+                'md' => 2,
+                'lg' => 3,
+                'xl' => 3,
+            ]) // Responsive grid layout
 
             ->recordActions([
                 ViewAction::make()->icon('heroicon-o-eye'),
